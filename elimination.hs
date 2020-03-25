@@ -165,6 +165,30 @@ standing' teams games conf = let emptymap = (Map.fromList [])::Map.Map String  T
                                  l = sort $  map(\x -> snd x)  $ Map.toList updatedmap                               
                                  in  ( filter (\(TeamScore _ conf' points) -> conf == conf') l )
 
+--- Gets a teams score 
+getScore::String -> Standings -> Maybe TeamScore
+getScore teamName [] =  Nothing 
+getScore teamName ((TeamScore name conf points):xs) = if teamName == name then Just (TeamScore name conf points) else getScore teamName xs 
+
+
+--- Add(merge) a score to a list of scores (standing)
+addScore::Standings -> TeamScore -> Standings
+addScore standing (TeamScore name conf points) = let ret = case  getScore name standing of 
+                                                                Nothing ->  (TeamScore name conf points) : standing 
+                                                                Just (TeamScore name' conf' points') -> map (\(TeamScore name'' conf'' points'') ->  (TeamScore name'' conf'' (if name'' == name then (points'' + points) else points'') ) )standing
+                                                 in (sort ret )
+
+
+addStanding':: Standings -> Standings ->Standings
+addStanding' stand1 stand2  = foldr (\x acc ->  addScore acc x ) stand2 stand1 
+
+--- Combine 2 standings 
+addStanding:: IO Standings -> IO Standings -> IO Standings
+addStanding stand1 stand2  = do 
+                                stand1' <- stand1 
+                                stand2' <- stand2
+                                return (addStanding' stand1' stand2')                                
+
 
 
 --- process a single game and add the points to the winning team
@@ -205,7 +229,7 @@ gamesToPlaySummary games = do
                                games' <- games 
                                return (gamesToPlaySummary' games'  )                             
 
-
+--- Generate a play  summary out of a given list of games. Pair of teams and the number of remaining games. 
 gamesToPlaySummary':: Games -> [(String,String,Int)]
 gamesToPlaySummary' games =    let emptymap = (Map.fromList [])::Map.Map (String, String) Int
                                    updatedmap = foldl (\acc game  ->   addgameToPlaySummary game acc) emptymap $ gamesToPlay' games
@@ -221,10 +245,11 @@ addgameToPlaySummary (Game round t location hometeam awayteam result) m =  let k
                                                                            in updated                                                                                      
 
 
+
                                                                                         
 g_teams = loadTeams "teams.csv"     
 g_games_all = loadGames "nba.csv"  g_teams   
 g_games = cutofdate g_games_all  "1/4/2019 20:00"               
-
-
+g_east_standing = standing g_teams g_games "east"
+g_west_standing = standing g_teams g_games "west"
 
