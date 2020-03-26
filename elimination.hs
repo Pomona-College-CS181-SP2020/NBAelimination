@@ -4,6 +4,7 @@ import Data.Time
 import Data.List.Split
 import Data.Maybe
 import Data.Sort
+import Data.Ord
 import Data.Set (Set)
 import Data.Char
 import qualified Data.Map as Map
@@ -150,19 +151,17 @@ teams' games =  let teams = map (\(Game  _ _ _  hometeam _ _) -> hometeam)  game
 
 
 
---- The games remaining to play 
+--- Get the standing of the teams
 standing:: IO Teams-> IO Games ->  String -> IO Standings
 standing teams games conf = do 
                         games' <- games
                         teams' <- teams
                         return (standing' teams' games' conf)
 
-
---- Get the standing of the teams
 standing':: Teams-> Games -> String -> Standings 
 standing' teams games conf = let emptymap = (Map.fromList [])::Map.Map String  TeamScore
                                  updatedmap =  foldl (\acc game  ->   prcoessGame teams game acc) emptymap games     
-                                 l = sort $  map(\x -> snd x)  $ Map.toList updatedmap                               
+                                 l = sort  $  map(\x -> snd x)  $ Map.toList updatedmap                               
                                  in  ( filter (\(TeamScore _ conf' points) -> conf == conf') l )
 
 --- Gets a teams score 
@@ -229,7 +228,7 @@ gamesToPlaySummary games = do
                                games' <- games 
                                return (gamesToPlaySummary' games'  )                             
 
---- Generate a play  summary out of a given list of games. Pair of teams and the number of remaining games. 
+--- Generate a play  summary out of a given list of games. The output is a pair of teams and the number of remaining games btween them. 
 gamesToPlaySummary':: Games -> [(String,String,Int)]
 gamesToPlaySummary' games =    let emptymap = (Map.fromList [])::Map.Map (String, String) Int
                                    updatedmap = foldl (\acc game  ->   addgameToPlaySummary game acc) emptymap $ gamesToPlay' games
@@ -244,12 +243,71 @@ addgameToPlaySummary (Game round t location hometeam awayteam result) m =  let k
                                                                                             ((Just val) )->  Map.insert  key (1+val) m 
                                                                            in updated                                                                                      
 
+--- Take a list of unplayed games and generate a list of lists of those games with all possible outcomes  (home team wins or away team wins)
+allPossibleResults::IO Games  -> IO  [Games]
+allPossibleResults games = do
+                            games' <- games
+                            return ( allPossibleResults' games' [] )
+
+allPossibleResults'::Games  -> Games  -> [Games]
+allPossibleResults' [] build  =  [build]
+allPossibleResults' ((Game round t location hometeam awayteam Nothing):xs) build  = (allPossibleResults' xs (build ++ [(Game round t location hometeam awayteam (Just (1,0) ) )])  ) ++ (allPossibleResults' xs (build ++ [(Game round t location hometeam awayteam (Just (0,1) ) )])  )
+allPossibleResults' ((Game round t location hometeam awayteam (Just res )):xs) _  = error "allPossibleResults error : Games should not have result"
+
+testTeamEliminationBruteForce:: IO Teams-> IO Games -> String -> IO  (Games,Bool)
+testTeamEliminationBruteForce  teams  games team = do
+                                                      teams' <- teams          
+                                                      games' <- games 
+                                                      return (testTeamEliminationBruteForce'  teams'  games' team )
+
+testTeamEliminationBruteForce':: Teams-> Games -> String -> (Games,Bool)
+testTeamEliminationBruteForce'  teams  games team = 
+                                                      --- Set given team to win all its non played games  
+                                                      let adjustedgames = map (\(Game round t location hometeam awayteam result ) -> setTeamToWinGame (Game round t location hometeam awayteam result )  team ) games
+                                                      
+                                                      --- get team conference 
+                                                          conf =  getConf teams team
+                                                      
+                                                      --- compute standing so far       
+                                                          standing = standing' teams adjustedgames conf
+                                                      
+                                                      --- Now get all the remaining games
+                                                          gamestoplay = gamesToPlay' adjustedgames 
+                                                                                                                                                         
+                                                          
+                                                      --- Get all possible results of the remaining games
+                                                          outcomes = allPossibleResults' gamestoplay [] 
+
+                                                      --- check if any of the possible outcome can lead for the given team to be the first
+                                                          ret = foldr (\outcome  (g,eliminated)-> if not eliminated 
+                                                                                                     then (g,eliminated)  
+                                                                                                     else if  teamname (getFirstPlaceTeam' (addStanding' standing  (standing' teams outcome conf))) == team 
+                                                                                                          then (outcome,False) 
+                                                                                                          else  (g,eliminated)) ([],True)  outcomes                                                       
+                                                                                                          
+                                                      
+                                                      in ret
+
+--- Set a result of a non played game to be a win for a given team if played by this team   
+setTeamToWinGame :: Game -> String -> Game
+setTeamToWinGame (Game round t location hometeam awayteam Nothing)  team = (Game round t location hometeam awayteam (if team == hometeam then Just (1,0) else if  team == awayteam then Just (0,1) else Nothing))  
+setTeamToWinGame game   team = game    
 
 
-                                                                                        
+--- Return the team in the first place 
+getFirstPlaceTeam:: IO Standings ->  IO TeamScore
+getFirstPlaceTeam standings  = do 
+                                        standings' <- standings
+                                        return (getFirstPlaceTeam' standings')
+
+getFirstPlaceTeam':: Standings ->  TeamScore
+getFirstPlaceTeam' standings  = last standings
+  
 g_teams = loadTeams "teams.csv"     
 g_games_all = loadGames "nba.csv"  g_teams   
-g_games = cutofdate g_games_all  "1/4/2019 20:00"               
+g_games = cutofdate g_games_all  "9/4/2019 20:00"     
+g_games_toplay = gamesToPlay g_games          
 g_east_standing = standing g_teams g_games "east"
 g_west_standing = standing g_teams g_games "west"
+g_gamestoplay = gamesToPlay g_games 
 
