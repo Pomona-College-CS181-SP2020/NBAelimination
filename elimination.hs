@@ -53,6 +53,8 @@ instance Ord TeamScore where
                                                                             | otherwise = GT
                 
 
+homeWin = (1,0)
+awayWin = (0,1)
 
 --- loads the teams information 
 loadTeams::String -> IO Teams    
@@ -177,7 +179,6 @@ addScore standing (TeamScore name conf points) = let ret = case  getScore name s
                                                                 Just (TeamScore name' conf' points') -> map (\(TeamScore name'' conf'' points'') ->  (TeamScore name'' conf'' (if name'' == name then (points'' + points) else points'') ) )standing
                                                  in (sort ret )
 
-
 addStanding':: Standings -> Standings ->Standings
 addStanding' stand1 stand2  = foldr (\x acc ->  addScore acc x ) stand2 stand1 
 
@@ -251,7 +252,7 @@ allPossibleResults games = do
 
 allPossibleResults'::Games  -> Games  -> [Games]
 allPossibleResults' [] build  =  [build]
-allPossibleResults' ((Game round t location hometeam awayteam Nothing):xs) build  = (allPossibleResults' xs (build ++ [(Game round t location hometeam awayteam (Just (1,0) ) )])  ) ++ (allPossibleResults' xs (build ++ [(Game round t location hometeam awayteam (Just (0,1) ) )])  )
+allPossibleResults' ((Game round t location hometeam awayteam Nothing):xs) build  = (allPossibleResults' xs (build ++ [(Game round t location hometeam awayteam (Just homeWin ) )])  ) ++ (allPossibleResults' xs (build ++ [(Game round t location hometeam awayteam (Just awayWin ) )])  )
 allPossibleResults' ((Game round t location hometeam awayteam (Just res )):xs) _  = error "allPossibleResults error : Games should not have result"
 
 testTeamEliminationBruteForce:: IO Teams-> IO Games -> String -> IO  (Games,Bool)
@@ -260,19 +261,35 @@ testTeamEliminationBruteForce  teams  games team = do
                                                       games' <- games 
                                                       return (testTeamEliminationBruteForce'  teams'  games' team )
 
+---For a team that is tested for elimination keep only the relevant games.
+-- Games btween 2 teams that can't end up before the given team are filtered out. 
+--- In addition set all the remaining games  for the tested team to winning  
+getRelevantGames::Teams-> Games -> String -> Games
+getRelevantGames teams games team =      ---  set the team to win all its remaining games 
+                                         let adjustedgames = map (\g -> setTeamToWinGame g  team ) games
+                                          
+                                                --- calculate the maximum point the team could get                                            
+                                             maxPoints = maxPointsforTeam' teams games team 
+
+                                                --- filter out non relevant games                                          
+                                             adjustedgamesFiltered = filter (\g -> maxPointsforTeam' teams games  (hometeam g) >=  maxPoints || maxPointsforTeam' teams games  (hometeam g) > maxPoints) adjustedgames   
+
+                                         in(adjustedgamesFiltered)
+
 testTeamEliminationBruteForce':: Teams-> Games -> String -> (Games,Bool)
 testTeamEliminationBruteForce'  teams  games team = 
-                                                      --- Set given team to win all its non played games  
-                                                      let adjustedgames = map (\(Game round t location hometeam awayteam result ) -> setTeamToWinGame (Game round t location hometeam awayteam result )  team ) games
+                                                      --- get relevant games   
+                                                      let relevantames = getRelevantGames teams games team 
+                                                                                                                
                                                       
                                                       --- get team conference 
                                                           conf =  getConf teams team
                                                       
                                                       --- compute standing so far       
-                                                          standing = standing' teams adjustedgames conf
+                                                          standing = standing' teams relevantames conf
                                                       
                                                       --- Now get all the remaining games
-                                                          gamestoplay = gamesToPlay' adjustedgames 
+                                                          gamestoplay = gamesToPlay' relevantames 
                                                                                                                                                          
                                                           
                                                       --- Get all possible results of the remaining games
@@ -290,24 +307,52 @@ testTeamEliminationBruteForce'  teams  games team =
 
 --- Set a result of a non played game to be a win for a given team if played by this team   
 setTeamToWinGame :: Game -> String -> Game
-setTeamToWinGame (Game round t location hometeam awayteam Nothing)  team = (Game round t location hometeam awayteam (if team == hometeam then Just (1,0) else if  team == awayteam then Just (0,1) else Nothing))  
+setTeamToWinGame (Game round t location hometeam awayteam Nothing)  team = (Game round t location hometeam awayteam (if team == hometeam then Just homeWin else if  team == awayteam then Just awayWin else Nothing))  
 setTeamToWinGame game   team = game    
 
+
+-- Calculate the maximum possible points a team can get 
+maxPointsforTeam :: IO Teams -> IO Games -> String -> IO Int 
+maxPointsforTeam  teams games team = do
+                                        teams' <- teams
+                                        games' <- games
+                                        return (maxPointsforTeam' teams' games' team)
+
+
+maxPointsforTeam' :: Teams -> Games -> String -> Int 
+maxPointsforTeam' teams games team = let teamgames = filter (\(Game _ _ _ hometeam awayteam _ ) -> hometeam == team ||  awayteam == team) games
+
+                                       --- get team conference 
+                                         conf =  getConf teams team
+                                       
+                                       --- set team to win all its remaining games 
+                                         adjustedgames = map (\g -> setTeamToWinGame g team ) teamgames   
+                                         
+                                         stand = filter (\score ->  teamname score == team ) $ standing' teams adjustedgames conf 
+                                   
+                                        --- return the maximum possible points the team can have
+                                     in (points $ head  stand )
 
 --- Return the team in the first place 
 getFirstPlaceTeam:: IO Standings ->  IO TeamScore
 getFirstPlaceTeam standings  = do 
-                                        standings' <- standings
-                                        return (getFirstPlaceTeam' standings')
+                                     standings' <- standings
+                                     return (getFirstPlaceTeam' standings')
 
 getFirstPlaceTeam':: Standings ->  TeamScore
 getFirstPlaceTeam' standings  = last standings
+
+  
+ 
+
+  
   
 g_teams = loadTeams "teams.csv"     
 g_games_all = loadGames "nba.csv"  g_teams   
-g_games = cutofdate g_games_all  "9/4/2019 20:00"     
+g_games = cutofdate g_games_all  "5/4/2019 20:00"     
 g_games_toplay = gamesToPlay g_games          
 g_east_standing = standing g_teams g_games "east"
 g_west_standing = standing g_teams g_games "west"
 g_gamestoplay = gamesToPlay g_games 
 
+g_test=testTeamEliminationBruteForce g_teams g_games "Milwaukee Bucks"
