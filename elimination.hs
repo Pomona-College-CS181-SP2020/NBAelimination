@@ -10,10 +10,8 @@ import Data.Char
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
----import Network.Wreq                  -- package wreq
----import Control.Lens                  -- package lens
----import qualified Data.ByteString.Lazy as BL
 
+data CONF = EAST |WEST deriving (Show, Eq)
 
 data Game = Game {
                     round ::Int
@@ -29,7 +27,7 @@ type Games = [Game]
 --- NBA teams is assigned a conference (east or west)
 data Team = Team {
                     name::String
-                    ,conference::String
+                    ,conference::CONF
                   } deriving (Show) 
 
 type Teams = [Team]
@@ -38,7 +36,7 @@ type Teams = [Team]
 -- the points for each team 
 data TeamScore = TeamScore{
                     teamname::String
-                    ,conf::String
+                    ,conf::CONF
                     ,points::Int 
                   } deriving (Show) 
 
@@ -69,7 +67,8 @@ linetoTeam :: String -> Team
 linetoTeam line =  let tokens = (splitOn "," line)::[String]
                        name  =  (tokens!!0) :: String 
                        conference  =  filter (\c -> isAlpha c) $ (tokens!!1) :: String   
-                   in (Team name conference ) 
+                       cnf = if conference == "east" then EAST else if   conference == "west" then WEST else error "bad conference"  
+                   in (Team name cnf ) 
 
 --- Load the NBA game results 
 loadGames::String -> IO Teams -> IO Games    
@@ -154,13 +153,13 @@ teams' games =  let teams = map (\(Game  _ _ _  hometeam _ _) -> hometeam)  game
 
 
 --- Get the standing of the teams
-standing:: IO Teams-> IO Games ->  String -> IO Standings
+standing:: IO Teams-> IO Games ->  CONF -> IO Standings
 standing teams games conf = do 
                         games' <- games
                         teams' <- teams
                         return (standing' teams' games' conf)
 
-standing':: Teams-> Games -> String -> Standings 
+standing':: Teams-> Games -> CONF -> Standings 
 standing' teams games conf = let emptymap = (Map.fromList [])::Map.Map String  TeamScore
                                  updatedmap =  foldl (\acc game  ->   prcoessGame teams game acc) emptymap games     
                                  l = sort  $  map(\x -> snd x)  $ Map.toList updatedmap                               
@@ -205,7 +204,7 @@ prcoessGame teams (Game round t location hometeam awayteam (Just(home,away)) ) s
                                                                                                          (Just (TeamScore _ conf points)) -> updated      
                                                                                           in  updated2 
 --- Get the conference for the team
-getConf :: [Team] -> [Char] -> String                                                                                   
+getConf :: [Team] -> [Char] -> CONF                                                                                   
 getConf teams teamName  = let (Team name conference) = head $ filter ( \(Team name conference) -> name == teamName) teams
                           in conference  
 
@@ -219,7 +218,7 @@ gamesToPlay games =   do
 gamesToPlay':: Games -> Games
 gamesToPlay' games = (filter (\(Game round t location hometeam awayteam result ) -> result == Nothing ) games)
 
---- tranform a pair into a canonical form.
+--- tranform a pair of teams into a canonical form.
 canonicalform:: Ord b => (b, b) -> (b, b)
 canonicalform (x,y) = if x < y then (x,y) else (y,x) 
 
@@ -351,8 +350,8 @@ g_teams = loadTeams "teams.csv"
 g_games_all = loadGames "nba.csv"  g_teams   
 g_games = cutofdate g_games_all  "5/4/2019 20:00"     
 g_games_toplay = gamesToPlay g_games          
-g_east_standing = standing g_teams g_games "east"
-g_west_standing = standing g_teams g_games "west"
+g_east_standing = standing g_teams g_games EAST
+g_west_standing = standing g_teams g_games WEST
 g_gamestoplay = gamesToPlay g_games 
 
 g_test=testTeamEliminationBruteForce g_teams g_games "Milwaukee Bucks"
