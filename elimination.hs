@@ -24,7 +24,7 @@ data Game = Game {
 
 type Games = [Game]
 
---- NBA teams is assigned a conference (east or west)
+--- NBA teams are assigned a conference (east or west)
 data Team = Team {
                     name::String
                     ,conference::CONF
@@ -76,7 +76,7 @@ loadGames fileName teams =   do
                         content <- readFile fileName                         
                         teams' <- teams 
                         let thelines = tail (lines content)
-                            games = (map linetoGame thelines)
+                            games = (map linetoGame $ filter(\l -> length l > 10)  thelines  )
                             games' = if checkGames games teams' then games else error "invaid game data " 
                         return games'
 
@@ -120,7 +120,7 @@ formatDatestr str =   let tokens = (splitOn "/" str)::[String]
                           month  = if length (tokens!!1)  < 2 then "0" ++ (tokens!!1) else tokens!!1
                       in   day ++ "/" ++   month ++ "/" ++ tokens!!2
 
--- Erease the results for games after specific date so wehave some data to work with                      
+-- Erease the results for games after specific date so we have some data to work with                      
 cutofdate:: IO Games -> String -> IO Games
 cutofdate games s  = do
                         games' <- games 
@@ -131,6 +131,17 @@ cutofdate':: Games -> String -> Games
 cutofdate' games s =  case strtoTime  s of
                             Nothing -> error "Bad date- date should be provided the format of dd/mm/yyyy hh:mm "
                             ( Just ltime) ->   map (\(Game round t location hometeam awayteam result ) -> if t <  ( Just ltime) then  (Game round t location hometeam awayteam result ) else (Game round t location hometeam awayteam Nothing ) ) games    
+
+
+-- Erease the results for games after specific round so we have some data to work with                      
+cutofround:: IO Games -> Int -> IO Games
+cutofround games r  = do
+                        games' <- games 
+                        return (cutofround'  games' r) 
+                      
+
+cutofround':: Games -> Int -> Games
+cutofround' games r =  map (\(Game round t location hometeam awayteam result ) -> if round < r then  (Game round t location hometeam awayteam result ) else (Game round t location hometeam awayteam Nothing ) ) games   
                         
 --- Convert a date string into a date
 strtoTime :: [Char] -> Maybe LocalTime
@@ -254,17 +265,19 @@ allPossibleResults' [] build  =  [build]
 allPossibleResults' ((Game round t location hometeam awayteam Nothing):xs) build  = (allPossibleResults' xs (build ++ [(Game round t location hometeam awayteam (Just homeWin ) )])  ) ++ (allPossibleResults' xs (build ++ [(Game round t location hometeam awayteam (Just awayWin ) )])  )
 allPossibleResults' ((Game round t location hometeam awayteam (Just res )):xs) _  = error "allPossibleResults error : Games should not have result"
 
-testTeamEliminationBruteForce:: IO Teams-> IO Games -> String -> IO  (Games,Bool)
-testTeamEliminationBruteForce  teams  games team = do
-                                                      teams' <- teams          
-                                                      games' <- games 
-                                                      return (testTeamEliminationBruteForce'  teams'  games' team )
 
 ---For a team that is tested for elimination keep only the relevant games.
 -- Games btween 2 teams that can't end up before the given team are filtered out. 
 --- In addition set all the remaining games  for the tested team to winning  
-getRelevantGames::Teams-> Games -> String -> Games
-getRelevantGames teams games team =      ---  set the team to win all its remaining games 
+getRelevantGames::IO Teams-> IO Games -> String -> IO Games
+getRelevantGames teams games team = do
+                                        teams' <- teams          
+                                        games' <- games 
+                                        return (getRelevantGames'  teams'  games' team )     
+
+
+getRelevantGames'::Teams-> Games -> String -> Games
+getRelevantGames' teams games team =      ---  set the team to win all its remaining games 
                                          let adjustedgames = map (\g -> setTeamToWinGame g  team ) games
                                           
                                                 --- calculate the maximum point the team could get                                            
@@ -275,34 +288,46 @@ getRelevantGames teams games team =      ---  set the team to win all its remain
 
                                          in(adjustedgamesFiltered)
 
+testTeamEliminationBruteForce:: IO Teams-> IO Games -> String -> IO  (Games,Bool)
+testTeamEliminationBruteForce  teams  games team = do
+                                                      teams' <- teams          
+                                                      games' <- games 
+                                                      return (testTeamEliminationBruteForce'  teams'  games' team )
+
 testTeamEliminationBruteForce':: Teams-> Games -> String -> (Games,Bool)
 testTeamEliminationBruteForce'  teams  games team = 
                                                       --- get relevant games   
-                                                      let relevantames = getRelevantGames teams games team 
+                                                      let relevantgames = getRelevantGames' teams games team 
+                                                      
+                                                          --- Set the remaining games of the team to be winning
+                                                          teamGames = map (\g -> setTeamToWinGame g  team ) $ filter (\g -> hometeam g == team || awayteam g == team) $ gamesToPlay' games
                                                                                                                 
+                                                        --- calculate the maximum point the team could get                                            
+                                                          maxPoints = maxPointsforTeam' teams games team 
+                                                          
                                                       
                                                       --- get team conference 
                                                           conf =  getConf teams team
                                                       
                                                       --- compute standing so far       
-                                                          standing = standing' teams relevantames conf
+                                                          standing = standing' teams relevantgames conf
                                                       
                                                       --- Now get all the remaining games
-                                                          gamestoplay = gamesToPlay' relevantames 
+                                                          gamestoplay = gamesToPlay' relevantgames 
                                                                                                                                                          
                                                           
                                                       --- Get all possible results of the remaining games
                                                           outcomes = allPossibleResults' gamestoplay [] 
 
                                                       --- check if any of the possible outcome can lead for the given team to be the first
-                                                          ret = foldr (\outcome  (g,eliminated)-> if not eliminated 
+                                                          (game',eliminated') = foldr (\outcome  (g,eliminated)-> if not eliminated 
                                                                                                      then (g,eliminated)  
-                                                                                                     else if  teamname (getFirstPlaceTeam' (addStanding' standing  (standing' teams outcome conf))) == team 
+                                                                                                     else if  getFirstPlacePoints' (addStanding' standing  (standing' teams outcome conf)) <= maxPoints 
                                                                                                           then (outcome,False) 
                                                                                                           else  (g,eliminated)) ([],True)  outcomes                                                       
                                                                                                           
                                                       
-                                                      in ret
+                                                      in ( if eliminated' then (game',eliminated') else (teamGames++game',eliminated') )
 
 --- Set a result of a non played game to be a win for a given team if played by this team   
 setTeamToWinGame :: Game -> String -> Game
@@ -332,17 +357,16 @@ maxPointsforTeam' teams games team = let teamgames = filter (\(Game _ _ _ homete
                                         --- return the maximum possible points the team can have
                                      in (points $ head  stand )
 
---- Return the team in the first place 
-getFirstPlaceTeam:: IO Standings ->  IO TeamScore
-getFirstPlaceTeam standings  = do 
+--- Return the points for the  team in the first place 
+getFirstPlacePoints:: IO Standings ->  IO Int
+getFirstPlacePoints standings  = do 
                                      standings' <- standings
-                                     return (getFirstPlaceTeam' standings')
+                                     return (getFirstPlacePoints' standings')
 
-getFirstPlaceTeam':: Standings ->  TeamScore
-getFirstPlaceTeam' standings  = last standings
+getFirstPlacePoints':: Standings ->  Int 
+getFirstPlacePoints' standings  = points $ last standings
 
-  
- 
+
 
   
   
@@ -354,4 +378,12 @@ g_east_standing = standing g_teams g_games EAST
 g_west_standing = standing g_teams g_games WEST
 g_gamestoplay = gamesToPlay g_games 
 
-g_test=testTeamEliminationBruteForce g_teams g_games "Milwaukee Bucks"
+g_elimination=testTeamEliminationBruteForce g_teams g_games "Milwaukee Bucks"
+
+
+g_teams_test_1 = loadTeams "teams_test_1.csv"     
+g_games_all_test_1 = loadGames "games_test_1.csv"  g_teams_test_1   
+g_games_test_1 = cutofround g_games_all_test_1  7
+g_east_standing_test_1 = standing g_teams_test_1 g_games_test_1 EAST
+g_elimination_test_1=testTeamEliminationBruteForce g_teams_test_1 g_games_test_1   "team_8"
+
