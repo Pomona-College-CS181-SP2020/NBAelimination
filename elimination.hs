@@ -50,11 +50,11 @@ instance Ord TeamScore where
                                                                             | points1 < points2 = LT
                                                                             | otherwise = GT
                 
-
+--- fake result of home team winning or away team winning 
 homeWin = (1,0)
 awayWin = (0,1)
 
---- loads the teams information 
+--- loads the teams information from a file 
 loadTeams::String -> IO Teams    
 loadTeams fileName =   do
                         content <- readFile fileName                         
@@ -62,7 +62,7 @@ loadTeams fileName =   do
                         return (map linetoTeam thelines)   
 
 
---- Load the teams information 
+--- Load the teams information from a file
 linetoTeam :: String -> Team 
 linetoTeam line =  let tokens = (splitOn "," line)::[String]
                        name  =  (tokens!!0) :: String 
@@ -70,7 +70,7 @@ linetoTeam line =  let tokens = (splitOn "," line)::[String]
                        cnf = if conference == "east" then EAST else if   conference == "west" then WEST else error "bad conference"  
                    in (Team name cnf ) 
 
---- Load the NBA game results 
+--- Load the NBA game results from a file 
 loadGames::String -> IO Teams -> IO Games    
 loadGames fileName teams =   do
                         content <- readFile fileName                         
@@ -95,7 +95,7 @@ getTeam::String -> Teams -> (Maybe Team)
 getTeam teamname []  = Nothing 
 getTeam teamname ((Team name conference):xs)  = if name == teamname then (Just  (Team name conference))  else  getTeam teamname xs    
 
---- Convert a single line of input into a game object 
+--- Convert a single line of input into a Game type 
 linetoGame:: String -> Game
 linetoGame line  =  let tokens = (splitOn "," line)::[String]
                         round = read (tokens!!0) :: Int   
@@ -141,7 +141,7 @@ cutofround games r  = do
                       
 
 cutofround':: Games -> Int -> Games
-cutofround' games r =  map (\(Game round t location hometeam awayteam result ) -> if round < r then  (Game round t location hometeam awayteam result ) else (Game round t location hometeam awayteam Nothing ) ) games   
+cutofround' games r =  map (\(Game round t location hometeam awayteam result ) -> if round <= r then  (Game round t location hometeam awayteam result ) else (Game round t location hometeam awayteam Nothing ) ) games   
                         
 --- Convert a date string into a date
 strtoTime :: [Char] -> Maybe LocalTime
@@ -233,20 +233,20 @@ gamesToPlay' games = (filter (\(Game round t location hometeam awayteam result )
 canonicalform:: Ord b => (b, b) -> (b, b)
 canonicalform (x,y) = if x < y then (x,y) else (y,x) 
 
--- for a given list of games return a summary of the remaining  games to play. 
+
+--- Generate a play  summary out of a given list of games. The output is a pair of teams and the number of remaining games btween them. 
 gamesToPlaySummary:: IO Games -> IO  [(String,String,Int)]
 gamesToPlaySummary games = do 
                                games' <- games 
                                return (gamesToPlaySummary' games'  )                             
 
---- Generate a play  summary out of a given list of games. The output is a pair of teams and the number of remaining games btween them. 
 gamesToPlaySummary':: Games -> [(String,String,Int)]
 gamesToPlaySummary' games =    let emptymap = (Map.fromList [])::Map.Map (String, String) Int
                                    updatedmap = foldl (\acc game  ->   addgameToPlaySummary game acc) emptymap $ gamesToPlay' games
                                    l =  (Map.toList updatedmap )   
                                    in map(\((team1,team2),val) -> (team1,team2,val) ) l
 
-
+--- add a agmes between 2 teams to a games summary map
 addgameToPlaySummary:: Num a => Game -> Map.Map (String, String) a -> Map.Map (String, String) a
 addgameToPlaySummary (Game round t location hometeam awayteam result) m =  let key = canonicalform (hometeam,awayteam)
                                                                                updated  = case Map.lookup key m of 
@@ -254,7 +254,7 @@ addgameToPlaySummary (Game round t location hometeam awayteam result) m =  let k
                                                                                             ((Just val) )->  Map.insert  key (1+val) m 
                                                                            in updated                                                                                      
 
---- Take a list of unplayed games and generate a list of lists of those games with all possible outcomes  (home team wins or away team wins)
+--- Take a list of unplayed games and generate a list of lists of those games with all possible outcomes (home team wins or away team wins)
 allPossibleResults::IO Games  -> IO  [Games]
 allPossibleResults games = do
                             games' <- games
@@ -266,7 +266,7 @@ allPossibleResults' ((Game round t location hometeam awayteam Nothing):xs) build
 allPossibleResults' ((Game round t location hometeam awayteam (Just res )):xs) _  = error "allPossibleResults error : Games should not have result"
 
 
----For a team that is tested for elimination keep only the relevant games.
+---For a team that is tested for elimination, keep only the relevant games.
 -- Games btween 2 teams that can't end up before the given team are filtered out. 
 --- In addition set all the remaining games  for the tested team to winning  
 getRelevantGames::IO Teams-> IO Games -> String -> IO Games
@@ -288,6 +288,7 @@ getRelevantGames' teams games team =      ---  set the team to win all its remai
 
                                          in(adjustedgamesFiltered)
 
+--- brutce force all scenarios to test if a team is eliminated or not.  
 testTeamEliminationBruteForce:: IO Teams-> IO Games -> String -> IO  (Games,Bool)
 testTeamEliminationBruteForce  teams  games team = do
                                                       teams' <- teams          
@@ -329,7 +330,7 @@ testTeamEliminationBruteForce'  teams  games team =
                                                       
                                                       in ( if eliminated' then (games',eliminated') else (teamGames++games',eliminated') )
 
-
+--- Test alimination for all teams using brute force  and return a list of eliminated teams
 eliminationBruteForce:: IO Teams-> IO Games -> IO [String]
 eliminationBruteForce teams games =  do
                                         teams' <- teams          
@@ -380,20 +381,22 @@ getFirstPlacePoints' standings  = points $  last (sort standings)
   
 g_teams = loadTeams "teams.csv"     
 g_games_all = loadGames "nba.csv"  g_teams   
-g_games = cutofdate g_games_all  "5/4/2019 20:00"     
+g_games = cutofround g_games_all  23  
 g_games_toplay = gamesToPlay g_games          
 g_east_standing = standing g_teams g_games EAST
 g_west_standing = standing g_teams g_games WEST
 g_gamestoplay = gamesToPlay g_games 
-
-g_elimination=testTeamEliminationBruteForce g_teams g_games "Milwaukee Bucks"
-
+g_elimination=testTeamEliminationBruteForce g_teams g_games "Toronto Raptors"
+relevantgames = getRelevantGames g_teams g_games "Toronto Raptors" 
 
 g_teams_test_1 = loadTeams "teams_test_1.csv"     
 g_games_all_test_1 = loadGames "games_test_1.csv"  g_teams_test_1   
-g_games_test_1 = cutofround g_games_all_test_1  7
+g_games_test_1 = cutofround g_games_all_test_1  6
 g_east_standing_test_1 = standing g_teams_test_1 g_games_test_1 EAST
 g_elimination_test_1=testTeamEliminationBruteForce g_teams_test_1 g_games_test_1   "team_2" 
-relevantgames = getRelevantGames g_teams_test_1 g_games_test_1  "team_2" 
+---relevantgames = getRelevantGames g_teams_test_1 g_games_test_1  "team_2" 
 stand = standing g_teams_test_1 relevantgames EAST 
 g_elist_test_1  = eliminationBruteForce g_teams_test_1 g_games_test_1 
+
+
+
