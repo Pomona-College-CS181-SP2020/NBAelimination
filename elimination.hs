@@ -284,7 +284,7 @@ getRelevantGames' teams games team =      ---  set the team to win all its remai
                                              maxPoints = maxPointsforTeam' teams games team 
 
                                                 --- filter out non relevant games                                          
-                                             adjustedgamesFiltered = filter (\g -> maxPointsforTeam' teams games  (hometeam g) >=  maxPoints || maxPointsforTeam' teams games  (hometeam g) > maxPoints) adjustedgames   
+                                             adjustedgamesFiltered = filter (\g -> maxPointsforTeam' teams games  (hometeam g) >=  maxPoints || maxPointsforTeam' teams games  (awayteam g) >= maxPoints) adjustedgames   
 
                                          in(adjustedgamesFiltered)
 
@@ -299,35 +299,45 @@ testTeamEliminationBruteForce'  teams  games team =
                                                       --- get relevant games   
                                                       let relevantgames = getRelevantGames' teams games team 
                                                       
-                                                          --- Set the remaining games of the team to be winning
+                                                        --- Set the remaining games of the team to be winning
                                                           teamGames = map (\g -> setTeamToWinGame g  team ) $ filter (\g -> hometeam g == team || awayteam g == team) $ gamesToPlay' games
                                                                                                                 
                                                         --- calculate the maximum point the team could get                                            
                                                           maxPoints = maxPointsforTeam' teams games team 
                                                           
                                                       
-                                                      --- get team conference 
+                                                        --- get team conference 
                                                           conf =  getConf teams team
                                                       
-                                                      --- compute standing so far       
+                                                        --- compute standing so far       
                                                           standing = standing' teams relevantgames conf
                                                       
-                                                      --- Now get all the remaining games
+                                                        --- Now get all the remaining games
                                                           gamestoplay = gamesToPlay' relevantgames 
                                                                                                                                                          
                                                           
-                                                      --- Get all possible results of the remaining games
+                                                        --- Get all possible results of the remaining games
                                                           outcomes = allPossibleResults' gamestoplay [] 
 
-                                                      --- check if any of the possible outcome can lead for the given team to be the first
-                                                          (game',eliminated') = foldr (\outcome  (g,eliminated)-> if not eliminated 
+                                                        --- check if any of the possible outcome can lead for the given team to be the first
+                                                          (games',eliminated') = foldr (\outcome  (g,eliminated)-> if not eliminated 
                                                                                                      then (g,eliminated)  
                                                                                                      else if  getFirstPlacePoints' (addStanding' standing  (standing' teams outcome conf)) <= maxPoints 
                                                                                                           then (outcome,False) 
                                                                                                           else  (g,eliminated)) ([],True)  outcomes                                                       
                                                                                                           
                                                       
-                                                      in ( if eliminated' then (game',eliminated') else (teamGames++game',eliminated') )
+                                                      in ( if eliminated' then (games',eliminated') else (teamGames++games',eliminated') )
+
+
+eliminationBruteForce:: IO Teams-> IO Games -> IO [String]
+eliminationBruteForce teams games =  do
+                                        teams' <- teams          
+                                        games' <- games 
+                                        return (eliminationBruteForce'   teams'  games'  )                
+
+eliminationBruteForce':: Teams-> Games -> [String]
+eliminationBruteForce' teams games =  foldr(\team acc -> if  snd ( testTeamEliminationBruteForce'  teams games (name team) )  then ( (name team):acc) else acc) []  teams
 
 --- Set a result of a non played game to be a win for a given team if played by this team   
 setTeamToWinGame :: Game -> String -> Game
@@ -364,11 +374,9 @@ getFirstPlacePoints standings  = do
                                      return (getFirstPlacePoints' standings')
 
 getFirstPlacePoints':: Standings ->  Int 
-getFirstPlacePoints' standings  = points $ last standings
+getFirstPlacePoints' standings  = points $  last (sort standings)
 
-
-
-  
+ 
   
 g_teams = loadTeams "teams.csv"     
 g_games_all = loadGames "nba.csv"  g_teams   
@@ -385,5 +393,7 @@ g_teams_test_1 = loadTeams "teams_test_1.csv"
 g_games_all_test_1 = loadGames "games_test_1.csv"  g_teams_test_1   
 g_games_test_1 = cutofround g_games_all_test_1  7
 g_east_standing_test_1 = standing g_teams_test_1 g_games_test_1 EAST
-g_elimination_test_1=testTeamEliminationBruteForce g_teams_test_1 g_games_test_1   "team_8"
-
+g_elimination_test_1=testTeamEliminationBruteForce g_teams_test_1 g_games_test_1   "team_2" 
+relevantgames = getRelevantGames g_teams_test_1 g_games_test_1  "team_2" 
+stand = standing g_teams_test_1 relevantgames EAST 
+g_elist_test_1  = eliminationBruteForce g_teams_test_1 g_games_test_1 
