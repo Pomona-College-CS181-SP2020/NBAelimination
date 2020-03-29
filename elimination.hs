@@ -30,7 +30,14 @@ syncVertex = "t"
 -- Get the list of games that are relevant for the MaxFlow - games that were not played yet and do not include teams that 
 -- can't be in the first place  and do not include the team that is tested for elimination.
 gamesForMaxFlowElimination::IO Teams -> IO Games -> String ->  IO Games
-gamesForMaxFlowElimination teams games team = gamesToPlay $ getRelevantGames teams games team 
+gamesForMaxFlowElimination teams games team = do 
+                                                 games' <- games 
+                                                 teams' <- teams 
+                                                 return (gamesForMaxFlowElimination' teams'  games' team)
+
+gamesForMaxFlowElimination'::Teams -> Games -> String -> Games
+gamesForMaxFlowElimination' teams games team = gamesToPlay' $ getRelevantGames' teams games team
+
 
 --- Build the source vertex of the network flow graph that has edge to each pair of teams with a capacity that is the number of games 
 --- to be played btween the teams.
@@ -60,13 +67,43 @@ buildGamesVertices' [] = []
 buildGamesVertices' ((team1,team2,geamsCount):xs)  =  (Vertex (team1 ++ "-" ++ team2) [ (team1,maxBound::Int) ,(team2,maxBound::Int) ]  (maxBound::Int)  ""):(buildGamesVertices' xs)          
 
 
+buildTeamsVertices:: IO Standings  -> IO Teams ->  IO Games -> String -> Int -> IO Graph 
+buildTeamsVertices stand teams  games  team teamMaxPoints = do 
+                                                                stand' <-  stand
+                                                                teams' <-  teams
+                                                                games' <-  games
+                                                                return (buildTeamsVertices' stand' teams'  games' team teamMaxPoints)
 
-buildTeamsVertices':: Teams -> Games -> String -> Graph 
-buildTeamsVertices'  teams  games  team = let conf = getConf  teams team 
-                                              stand = standing' teams games conf
-                                              maxPoints = maxPointsforTeam'  teams games team 
-                                              ret = foldr (\(TeamScore team' conf' points')  acc  -> (Vertex team' [(syncVertex,maxPoints - points' )] (maxBound::Int)  ""):acc ) []  stand
-                                          in ret     
+buildTeamsVertices':: Standings  -> Teams ->  Games -> String -> Int -> Graph 
+buildTeamsVertices' stand teams  games  team teamMaxPoints = let conf = getConf  teams team                                                                         
+                                                                 relevantTeams = foldr (\(Game round t location hometeam awayteam result ) acc -> if elem hometeam acc  &&  elem awayteam  acc then acc 
+                                                                                                                                                else if elem hometeam acc  && not ( elem awayteam  acc) then awayteam:acc 
+                                                                                                                                                else if not (elem hometeam acc ) &&   elem awayteam  acc then hometeam:acc 
+                                                                                                                                                else awayteam:hometeam:acc 
+                                                                                                                                            )[] games
+                                                                 ret = foldr ( \(TeamScore teamname conf' points  ) acc -> if  elem teamname  relevantTeams then  
+                                                                                                                          (Vertex teamname [ (syncVertex ,if conf == conf' then  teamMaxPoints-points else (maxBound::Int))] (maxBound::Int)  "" ):acc
+                                                                                                                           else  acc  
+                                                                                                                    )[]   stand                                    
+                                                             in ret     
 
 
-                              
+buildGraphFromGames:: IO Teams -> IO  Games -> String ->  IO Graph 
+buildGraphFromGames teams games team = do 
+                                          teams' <- teams
+                                          games' <- games
+                                          return (buildGraphFromGames' teams' games' team)
+
+buildGraphFromGames':: Teams ->  Games -> String ->  Graph 
+buildGraphFromGames' teams games team = let maxFlowGames = gamesForMaxFlowElimination' teams games team 
+                                            stand = (standing' teams games EAST )++ (standing' teams games WEST)
+                                            maxFlowGamesSummary = gamesToPlaySummary' maxFlowGames
+                                            sourceVertex = buildSourceVertex' maxFlowGamesSummary
+                                            gameVertices = buildGamesVertices' maxFlowGamesSummary
+                                            teamVertices = buildTeamsVertices' stand teams maxFlowGames team (maxPointsforTeam' teams games team )
+                                        in  sourceVertex ++  gameVertices ++   teamVertices ++ [(Vertex syncVertex [] (maxBound::Int)  "" )]
+ 
+
+ 
+ 
+ 

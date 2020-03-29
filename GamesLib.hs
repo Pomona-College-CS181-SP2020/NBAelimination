@@ -18,10 +18,13 @@ cutofdate,
 standing,
 standing',
 getRelevantGames,
+getRelevantGames',
 gamesToPlaySummary,
+gamesToPlaySummary',
 getConf, 
 maxPointsforTeam,
 maxPointsforTeam',
+gamesToPlay',
 gamesToPlay) where
 
 
@@ -61,6 +64,8 @@ data Team = Team {
 
 type Teams = [Team]
 
+instance Eq Team where
+  (Team name1 _ ) == (Team name2 _ ) = name1 == name2
 
 -- the points for each team 
 data TeamScore = TeamScore{
