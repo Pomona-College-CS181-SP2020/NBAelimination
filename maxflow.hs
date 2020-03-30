@@ -1,8 +1,9 @@
 module MaxFlow 
 (checkForNegativeCapacity,isValidMaxFlowNet,solveMaxFlow,MaxFlowNet,MaxFlowNet(MaxFlowNet),Graph,Vertex(Vertex)) where
-
 import Data.List 
 
+
+---------------------------------public interface ----------------------------------------------
 
 data Vertex = Vertex {
                           vertexLabel :: String
@@ -15,7 +16,42 @@ data Vertex = Vertex {
 -- Each vertex is a label, an adjacency list (neighbors),
 -- a distance away from the root, and a predecessor label.
 type Graph =  [Vertex] 
---- We will begin by modeling a graph as a list of vertexes which themselves hold the edges in adjacency lists.
+
+
+--- The network flow is a graph with source and sync 
+data MaxFlowNet = MaxFlowNet {
+                         graph :: Graph,
+                         source:: String,
+                         sync ::  String 
+                      } deriving (Show)
+
+
+
+--- return True if a maxflow graph contains negative capacity
+checkForNegativeCapacity:: Graph -> Bool 
+checkForNegativeCapacity graph = foldr  (\(Vertex label n p d) acc  -> (length $ filter( \(_, cost) -> cost < 0 ) n    ) > 0 || acc ) False graph
+
+--- Test if networkflow graph is valid  
+isValidMaxFlowNet :: MaxFlowNet -> Bool                     
+isValidMaxFlowNet (MaxFlowNet g source sync) =  labelinGraph  g source &&  labelinGraph  g sync   && noEdgesIntoSource && noEdgesFromSync && source /= sync && checkGraph g
+                                                    where 
+                                                        noEdgesIntoSource = length (  filter (\(Vertex label n p d)  -> neighborscontains n source) g ) == 0
+                                                        noEdgesFromSync = length (  filter (\(Vertex label n p d) -> label == sync && n /= []) g ) == 0
+
+--- Solve the maxflow problem. Input is a graph ,source and sync. Output is the saturated residual graph and the maxflow  
+solveMaxFlow:: Graph -> String -> String ->(Graph,Int)                      
+solveMaxFlow graph source sync = solveMaxFlow_helper  graph source sync 0  
+
+
+-----------------------------------implementation functions----------------------------------------------------------
+
+-- Takes a graph, a list of strings, and outputs a list of vertexes.
+graphVertexes :: Graph -> [String] ->  [Vertex]
+-- Empty graph.
+graphVertexes ( []) _ = []
+graphVertexes ( (x:y)) [] =[]
+graphVertexes ( (x:y)) keys = filter (\ z -> vertexLabel z `elem` keys) (x:y)
+
 
 --- Getters
 -- Takes in a vertex, a list of vertexes, and returns true or false.
@@ -31,17 +67,6 @@ labelinGraph []  label = False
 labelinGraph (x:y) label = label == vertexLabel x || labelinGraph y label
 
 
-checkForNegativeCapacity:: Graph -> Bool 
-checkForNegativeCapacity graph = foldr  (\(Vertex label n p d) acc  -> (length $ filter( \(_, cost) -> cost < 0 ) n    ) > 0 || acc ) False graph
-
-
------------------------------------------------------------------------------
--- Takes a graph, a list of strings, and outputs a list of vertexes.
-graphVertexes :: Graph -> [String] ->  [Vertex]
--- Empty graph.
-graphVertexes ( []) _ = []
-graphVertexes ( (x:y)) [] =[]
-graphVertexes ( (x:y)) keys = filter (\ z -> vertexLabel z `elem` keys) (x:y)
 
 
 
@@ -171,22 +196,7 @@ bfs_path g startLabel endLabel =
      in  reverse(trace_back bfs_g endLabel startLabel)
 
 
-g =  [
-                Vertex "a" [("b",3), ("c",3) ,("d",7)         ] (maxBound::Int)  "",
-                Vertex "b" [("d",6), ("f",5)     ] (maxBound::Int) "",
-                Vertex "c" [("a",3) ,("e",3)        ] (maxBound::Int) ""    ,
-                Vertex "d" [ ("a",5)] (maxBound::Int) ""      ,
-                Vertex "e" [("c",4) ] (maxBound::Int) ""      ,
-                Vertex "f" [ ] (maxBound::Int) ""                              
-                ]
 
---- The network flow is a graph with source and sync 
-data MaxFlowNet = MaxFlowNet {
-                         graph :: Graph,
-                         source:: String,
-                         sync ::  String 
-                      } deriving (Show)
- 
 --- test if neighbors contains a vertex label 
 neighborscontains :: Eq t => [(t, b)] -> t -> Bool
 neighborscontains [] l = False
@@ -260,12 +270,9 @@ solveMaxFlow_helper graph source sync currentflow = ret
      ret  = if flow == 0 then (graph,currentflow) else solveMaxFlow_helper  residual source sync (flow + currentflow)
 
 
---- Solve the maxflow problem. Input is a graph ,source and sync. Output is the saturated residual graph and the maxflow  
-solveMaxFlow:: Graph -> String -> String ->(Graph,Int)                      
-solveMaxFlow graph source sync = solveMaxFlow_helper  graph source sync 0  
+         
 
-
-
+   
 g2 =  [
                 Vertex "0" [("1",16), ("2",13)         ] (maxBound::Int)  "",
                 Vertex "1" [("2",10), ("3",12)  ] (maxBound::Int) "",
@@ -284,15 +291,12 @@ g3 =  [
                 Vertex "5" [ ] (maxBound::Int) ""    
       ]
 
---- Test if networkflow graph is valid  
-isValidMaxFlowNet :: MaxFlowNet -> Bool                     
-isValidMaxFlowNet (MaxFlowNet g source sync) =  labelinGraph  g source &&  labelinGraph  g sync   && noEdgesIntoSource && noEdgesFromSync && source /= sync && checkGraph g
-                                                    where 
-                                                        noEdgesIntoSource = length (  filter (\(Vertex label n p d)  -> neighborscontains n source) g ) == 0
-                                                        noEdgesFromSync = length (  filter (\(Vertex label n p d) -> label == sync && n /= []) g ) == 0
 
-
-          
-
-   
-
+g =  [
+                Vertex "a" [("b",3), ("c",3) ,("d",7)         ] (maxBound::Int)  "",
+                Vertex "b" [("d",6), ("f",5)     ] (maxBound::Int) "",
+                Vertex "c" [("a",3) ,("e",3)        ] (maxBound::Int) ""    ,
+                Vertex "d" [ ("a",5)] (maxBound::Int) ""      ,
+                Vertex "e" [("c",4) ] (maxBound::Int) ""      ,
+                Vertex "f" [ ] (maxBound::Int) ""                              
+                ]
