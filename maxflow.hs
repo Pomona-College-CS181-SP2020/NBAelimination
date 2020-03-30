@@ -1,5 +1,5 @@
 module MaxFlow 
-(solveMaxFlow,MaxFlowNet,Graph,Vertex(Vertex)) where
+(checkForNegativeCapacity,isValidMaxFlowNet,solveMaxFlow,MaxFlowNet,MaxFlowNet(MaxFlowNet),Graph,Vertex(Vertex)) where
 
 import Data.List 
 
@@ -29,6 +29,10 @@ vertexInVertexes Vertex {vertexLabel = label} (x:y) = foldl (\ acc l -> vertexLa
 labelinGraph::Graph -> String -> Bool
 labelinGraph []  label = False
 labelinGraph (x:y) label = label == vertexLabel x || labelinGraph y label
+
+
+checkForNegativeCapacity:: Graph -> Bool 
+checkForNegativeCapacity graph = foldr  (\(Vertex label n p d) acc  -> (length $ filter( \(_, cost) -> cost < 0 ) n    ) > 0 || acc ) False graph
 
 
 -----------------------------------------------------------------------------

@@ -88,6 +88,7 @@ buildTeamsVertices' stand teams  games  team teamMaxPoints = let conf = getConf 
                                                              in ret     
 
 
+---Build the full maxflow graph to test elimination of a given team 
 buildGraphFromGames:: IO Teams -> IO  Games -> String ->  IO Graph 
 buildGraphFromGames teams games team = do 
                                           teams' <- teams
@@ -104,6 +105,45 @@ buildGraphFromGames' teams games team = let maxFlowGames = gamesForMaxFlowElimin
                                         in  sourceVertex ++  gameVertices ++   teamVertices ++ [(Vertex syncVertex [] (maxBound::Int)  "" )]
  
 
+
+testTeamEliminationMaxFlow:: IO  Teams -> IO Games -> String -> IO Bool  
+testTeamEliminationMaxFlow teams games team = do 
+                                                 teams' <- teams
+                                                 games' <- games
+                                                 return (testTeamEliminationMaxFlow' teams' games' team)
+ 
+testTeamEliminationMaxFlow'::  Teams ->  Games -> String -> Bool
+testTeamEliminationMaxFlow' teams games team =  let maxFlowGraph = buildGraphFromGames' teams games team
+                                                    numberOfGames = length $ gamesForMaxFlowElimination' teams games team 
+                                                    simpleElimination = checkForNegativeCapacity maxFlowGraph
+                                                    maxFlow =  solveMaxFlow maxFlowGraph sourceVertex syncVertex
+                                                in if (length maxFlowGraph <= 2) then False else if simpleElimination then True else (snd maxFlow) < numberOfGames
+                                                
+
+eliminationMaxFlow:: IO Teams -> IO Games -> IO [String]
+eliminationMaxFlow teams games  = do 
+                                         teams' <- teams
+                                         games' <- games
+                                         return (eliminationMaxFlow' teams' games' )
+                                                
+eliminationMaxFlow':: Teams -> Games -> [String]
+eliminationMaxFlow' teams games = foldr (\(Team name conf ) acc  -> if ( testTeamEliminationMaxFlow' teams games name ) then name:acc else acc)[] teams
+
+
+
+testTeamEliminationMaxFlowDebug teams games team = do 
+                                                 teams' <- teams
+                                                 games' <- games
+                                                 return (testTeamEliminationMaxFlowDebug' teams' games' team)
+ 
+
+testTeamEliminationMaxFlowDebug' teams games team =  let maxFlowGraph = buildGraphFromGames' teams games team
+                                                         numberOfGames = length $ gamesForMaxFlowElimination' teams games team 
+                                                         simpleElimination = checkForNegativeCapacity maxFlowGraph
+                                                         maxFlow =  solveMaxFlow maxFlowGraph sourceVertex syncVertex
+                                                         
+                                                     in (snd maxFlow,numberOfGames,simpleElimination,(maxPointsforTeam' teams games team ))
+ 
  
  
  
