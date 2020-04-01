@@ -287,14 +287,14 @@ linetoGame line  =  let tokens = (splitOn "," line)::[String]
                         location = tokens!!2                      
                         hometeam = tokens!!3
                         awayteam = tokens!!4
-                        result = Just( gameresult (tokens!!5 ))
+                        result =  gameresult (tokens!!5 )
                     in (Game round  time location  hometeam awayteam result )
 
 
--- Extract the result of a game from a string. For example, "100-96" become (100,96)
-gameresult:: String -> (Int,Int) 
+-- Extract the result of a game from a string or return Nothing if not exists. For example, "100-96" become (100,96)
+gameresult:: String -> Maybe(Int,Int) 
 gameresult str  = let  tokens = (splitOn "-" str)::[String]
-                   in (read (tokens!!0) :: Int   , read (tokens!!1) :: Int  )
+                  in if (length tokens) /= 2 then Nothing else Just ((read (tokens!!0) :: Int   , read (tokens!!1) :: Int  ))
 
 
 --make sure that the date string has 2 digits for the month and the day in the month. 

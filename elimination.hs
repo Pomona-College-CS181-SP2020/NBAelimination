@@ -1,28 +1,34 @@
+module Elimination 
+(eliminationMaxFlow,eliminationMaxFlow') where
+
 import MaxFlow
 import GamesLib
 
-
-
   
-g_teams = loadTeams "teams.csv"     
-g_games_all = loadGames "nba.csv"  g_teams   
-g_games = cutofround g_games_all  23  
-g_games_toplay = gamesToPlay g_games          
-g_east_standing = standing g_teams g_games EAST
-g_west_standing = standing g_teams g_games WEST
-g_gamestoplay = gamesToPlay g_games 
-g_elimination=testTeamEliminationBruteForce g_teams g_games "Toronto Raptors"
---relevantgames = gamesForMaxFlowElimination g_teams g_games "Toronto Raptors" 
 
-g_teams_test_1 = loadTeams "teams_test_1.csv"     
-g_games_all_test_1 = loadGames "games_test_1.csv"  g_teams_test_1   
-g_games_test_1 = cutofround g_games_all_test_1  5
-g_east_standing_test_1 = standing g_teams_test_1 g_games_test_1 EAST
-g_elimination_test_1=testTeamEliminationBruteForce g_teams_test_1 g_games_test_1   "team_2" 
-relevantgames = gamesForMaxFlowElimination g_teams_test_1 g_games_test_1  "team_5" 
-gamesSummary   =  gamesToPlaySummary  relevantgames
-stand = standing g_teams_test_1 relevantgames EAST 
-g_elist_test_1  = eliminationBruteForce g_teams_test_1 g_games_test_1 
+---------------------------------public interface ----------------------------------------------
+
+
+--- Takes list of teams and games (including not yet played games) and generate list of teams that can't be the first place in thier conference under any scenario
+eliminationMaxFlow:: IO Teams -> IO Games -> IO [String]
+eliminationMaxFlow teams games  = do 
+                                         teams' <- teams
+                                         games' <- games
+                                         return (eliminationMaxFlow' teams' games' )
+                                                
+eliminationMaxFlow':: Teams -> Games -> [String]
+eliminationMaxFlow' teams games = foldr (\(Team name conf ) acc  -> if ( testTeamEliminationMaxFlow' teams games name ) then name:acc else acc)[] teams
+
+--- Takes teams games files and generate list of teams that can't be the first place in thier conference under any scenario
+eliminationMaxFlowFromFile:: String  -> String -> IO [String]
+eliminationMaxFlowFromFile teamsfile gamesfile  = let   teams = loadTeams  teamsfile 
+                                                        games = loadGames gamesfile teams
+                                                        in  (eliminationMaxFlow teams games)
+                                         
+
+
+-----------------------------------implementation functions----------------------------------------------------------
+
 
 sourceVertex = "s" 
 syncVertex = "t"  
@@ -120,15 +126,6 @@ testTeamEliminationMaxFlow' teams games team =  let maxFlowGraph = buildGraphFro
                                                 in if (length maxFlowGraph <= 2) then False else if simpleElimination then True else (snd maxFlow) < numberOfGames
                                                 
 
-eliminationMaxFlow:: IO Teams -> IO Games -> IO [String]
-eliminationMaxFlow teams games  = do 
-                                         teams' <- teams
-                                         games' <- games
-                                         return (eliminationMaxFlow' teams' games' )
-                                                
-eliminationMaxFlow':: Teams -> Games -> [String]
-eliminationMaxFlow' teams games = foldr (\(Team name conf ) acc  -> if ( testTeamEliminationMaxFlow' teams games name ) then name:acc else acc)[] teams
-
 
 
 testTeamEliminationMaxFlowDebug teams games team = do 
@@ -145,5 +142,25 @@ testTeamEliminationMaxFlowDebug' teams games team =  let maxFlowGraph = buildGra
                                                      in (snd maxFlow,numberOfGames,simpleElimination,(maxPointsforTeam' teams games team ))
  
  
- 
+g_teams = loadTeams "teams.csv"     
+g_games_all = loadGames "nba.csv"  g_teams   
+g_games = cutofround g_games_all  23  
+g_games_toplay = gamesToPlay g_games          
+g_east_standing = standing g_teams g_games EAST
+g_west_standing = standing g_teams g_games WEST
+g_gamestoplay = gamesToPlay g_games 
+g_elimination=testTeamEliminationBruteForce g_teams g_games "Toronto Raptors"
+--relevantgames = gamesForMaxFlowElimination g_teams g_games "Toronto Raptors" 
+
+g_teams_test_1 = loadTeams "teams_test_1.csv"     
+g_games_all_test_1 = loadGames "games_test_1.csv"  g_teams_test_1   
+g_games_test_1 = g_games_all_test_1
+g_east_standing_test_1 = standing g_teams_test_1 g_games_test_1 EAST
+g_elimination_test_1=testTeamEliminationBruteForce g_teams_test_1 g_games_test_1   "team_2" 
+relevantgames = gamesForMaxFlowElimination g_teams_test_1 g_games_test_1  "team_5" 
+gamesSummary   =  gamesToPlaySummary  relevantgames
+stand = standing g_teams_test_1 relevantgames EAST 
+g_elist_test_1  = eliminationBruteForce g_teams_test_1 g_games_test_1  
+
+
  
