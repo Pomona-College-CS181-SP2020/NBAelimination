@@ -1,5 +1,5 @@
 module Elimination 
-(eliminationMaxFlow,eliminationMaxFlow') where
+(eliminationMaxFlow,eliminationMaxFlow',eliminationMaxFlowFromFile) where
 
 import MaxFlow
 import GamesLib
@@ -114,6 +114,7 @@ buildGraphFromGames' teams games team = let maxFlowGames = gamesForMaxFlowElimin
 
 testTeamEliminationMaxFlow:: IO  Teams -> IO Games -> String -> IO Bool  
 testTeamEliminationMaxFlow teams games team = do 
+                                                 ret <- putStr $ "testing elimination for team " ++ team
                                                  teams' <- teams
                                                  games' <- games
                                                  return (testTeamEliminationMaxFlow' teams' games' team)
@@ -144,7 +145,7 @@ testTeamEliminationMaxFlowDebug' teams games team =  let maxFlowGraph = buildGra
  
 g_teams = loadTeams "teams.csv"     
 g_games_all = loadGames "nba.csv"  g_teams   
-g_games = cutofround g_games_all  23  
+g_games = cutofround g_games_all  10 
 g_games_toplay = gamesToPlay g_games          
 g_east_standing = standing g_teams g_games EAST
 g_west_standing = standing g_teams g_games WEST
