@@ -157,8 +157,8 @@ g_gamestoplay = gamesToPlay g_games
 g_elimination=testTeamEliminationBruteForce g_teams g_games "Toronto Raptors"
 --relevantgames = gamesForMaxFlowElimination g_teams g_games "Toronto Raptors" 
 
-g_teams_test_1 = loadTeams "teams_test_1.csv"     
-g_games_all_test_1 = loadGames "games_test_1.csv"  g_teams_test_1   
+g_teams_test_1 = loadTeams "teamstest.csv"     
+g_games_all_test_1 = loadGames "gamestest_1.csv"  g_teams_test_1   
 g_games_test_1 = g_games_all_test_1
 g_east_standing_test_1 = standing g_teams_test_1 g_games_test_1 EAST
 g_elimination_test_1=testTeamEliminationBruteForce g_teams_test_1 g_games_test_1   "team_2" 
