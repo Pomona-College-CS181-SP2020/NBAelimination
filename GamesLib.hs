@@ -123,7 +123,7 @@ loadGames fileName teams =   do
                         content <- readFile fileName                         
                         teams' <- teams 
                         let thelines = tail (lines content)
-                            games = (map linetoGame $ filter(\l -> length l > 10)  thelines  )
+                            games = (map linetoGame $ filter(\l -> length l > 10 && not (startsWithstr "--" l) )  thelines  )
                             games' = if checkGames games teams' then games else error "invaid game data " 
                         return games'
 
@@ -284,6 +284,13 @@ getScore teamName [] =  Nothing
 getScore teamName ((TeamScore name conf points):xs) = if teamName == name then Just (TeamScore name conf points) else getScore teamName xs 
 
 
+--- checks is a string starts with a given prefix 
+startsWithstr :: Eq a => [a] -> [a] -> Bool
+startsWithstr [] _ = True;
+startsWithstr x [] = False;
+startsWithstr (x:xs) (y:ys) =  x == y && startsWithstr  xs ys
+
+
 --- Add(merge) a score to a list of scores (standing)
 addScore::Standings -> TeamScore -> Standings
 addScore standing (TeamScore name conf points) = let ret = case  getScore name standing of 
@@ -378,6 +385,7 @@ setTeamToWinGame game   team = game
 
 
 
- 
+g_teams = loadTeams "teamstest.csv"
+g_games = loadGames "gamestest_1.csv" g_teams
 
 
