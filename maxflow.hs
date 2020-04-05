@@ -67,9 +67,6 @@ labelinGraph []  label = False
 labelinGraph (x:y) label = label == vertexLabel x || labelinGraph y label
 
 
-
-
-
 --- checks if Neighbors list is valid 
 checkvertexNeighbors :: Graph-> [(String,Int)] -> Bool
 checkvertexNeighbors [] _ = error  "Empty graph" 
@@ -232,7 +229,7 @@ reduceEdgeCost g source dest reduceAmount   = newGraph  where
                                               newGraph = if checkGraph updatenewGraph then updatenewGraph else error "invalid graph"
                                               
                                              
--- reduce cost along a path as part of the edmond karp algorithem 
+-- reduce cost along a given path as part of the edmond karp algorithem 
 reduceEdgeCostAlongPath:: Graph -> [String] -> Int -> Graph
 reduceEdgeCostAlongPath graph [] reduceAmount = graph
 reduceEdgeCostAlongPath graph [a] reduceAmount = graph
@@ -243,7 +240,8 @@ reduceEdgeCostAlongPath graph (x:y:xs) reduceAmount = newgraph where
                                                     
 
 
-
+--- execute a single step of edmond karp and return the new residual graph and the additional flow 
+--- that was enabled by this step
 solveMaxFlowStep:: Graph -> String -> String -> (Graph,Int)                      
 solveMaxFlowStep  graph source sync = ret                     
  where 
@@ -256,7 +254,6 @@ solveMaxFlowStep  graph source sync = ret
      -- reduce the capacity along the path and ad residual capacity
      ret  = if path == [] then (graph,0) else  ((reduceEdgeCostAlongPath graph path mincost),mincost)
      
-
 
 --- Helper function to solve the maxflow problem      
 solveMaxFlow_helper:: Graph -> String -> String -> Int -> (Graph,Int)                      
@@ -272,31 +269,3 @@ solveMaxFlow_helper graph source sync currentflow = ret
 
          
 
-   
-g2 =  [
-                Vertex "0" [("1",16), ("2",13)         ] (maxBound::Int)  "",
-                Vertex "1" [("2",10), ("3",12)  ] (maxBound::Int) "",
-                Vertex "2" [("4",14) ,("1",4)        ] (maxBound::Int) ""    ,
-                Vertex "3" [ ("5",20), ("2",9)] (maxBound::Int) ""      ,
-                Vertex "4" [("5",4), ("3",7) ] (maxBound::Int) ""      ,
-                Vertex "5" [ ] (maxBound::Int) ""    
-      ]
-
-g3 =  [
-                Vertex "0" [("1",4), ("4",2)         ] (maxBound::Int)  "",
-                Vertex "1" [("3",2), ("2",4)  ] (maxBound::Int) "",
-                Vertex "2" [("5",3)        ] (maxBound::Int) ""    ,
-                Vertex "3" [ ("2",1), ("5",1)] (maxBound::Int) ""      ,
-                Vertex "4" [("3",1), ("5",3) ] (maxBound::Int) ""      ,
-                Vertex "5" [ ] (maxBound::Int) ""    
-      ]
-
-
-g =  [
-                Vertex "a" [("b",3), ("c",3) ,("d",7)         ] (maxBound::Int)  "",
-                Vertex "b" [("d",6), ("f",5)     ] (maxBound::Int) "",
-                Vertex "c" [("a",3) ,("e",3)        ] (maxBound::Int) ""    ,
-                Vertex "d" [ ("a",5)] (maxBound::Int) ""      ,
-                Vertex "e" [("c",4) ] (maxBound::Int) ""      ,
-                Vertex "f" [ ] (maxBound::Int) ""                              
-                ]

@@ -1,15 +1,15 @@
 module Elimination 
-(eliminationMaxFlow,eliminationMaxFlow',eliminationMaxFlowFromFile) where
+(eliminationMaxFlow,eliminationMaxFlow',eliminationMaxFlowFromFile,eliminationBruteForce',eliminationBruteForce,eliminationBruteForceFromFile,loadTeams,loadGames,cutofround,cutofdate) where
 
 import MaxFlow
 import GamesLib
 
   
 
----------------------------------public interface ----------------------------------------------
+---------------------------------public interface -------------------------------------------------------------------
 
 
---- Takes list of teams and games (including not yet played games) and generate list of teams that can't be the first place in thier conference under any scenario
+--- Takes a list of teams and games (including not yet played games) and generate list of teams that can't be the first place in thier conference under any scenario
 eliminationMaxFlow:: IO Teams -> IO Games -> IO [String]
 eliminationMaxFlow teams games  = do 
                                          teams' <- teams
@@ -19,15 +19,19 @@ eliminationMaxFlow teams games  = do
 eliminationMaxFlow':: Teams -> Games -> [String]
 eliminationMaxFlow' teams games = foldr (\(Team name conf ) acc  -> if ( testTeamEliminationMaxFlow' teams games name ) then name:acc else acc)[] teams
 
---- Takes teams games files and generate list of teams that can't be the first place in thier conference under any scenario
+--- Takes teams and  games files and generate list of teams that can't be the first place in thier conference under any scenario
 eliminationMaxFlowFromFile:: String  -> String -> IO [String]
 eliminationMaxFlowFromFile teamsfile gamesfile  = let   teams = loadTeams  teamsfile 
                                                         games = loadGames gamesfile teams
-                                                        in  (eliminationMaxFlow teams games)
-                                         
-
-
------------------------------------implementation functions----------------------------------------------------------
+                                                  in  (eliminationMaxFlow teams games)
+ 
+--- Takes teams and  games files and generate list of teams that can't be the first place in thier conference under any scenario (using brute force)
+eliminationBruteForceFromFile:: String  -> String -> IO [String]
+eliminationBruteForceFromFile teamsfile gamesfile  = let   teams = loadTeams  teamsfile 
+                                                           games = loadGames gamesfile teams
+                                                     in  (eliminationBruteForce teams games)
+ 
+-----------------------------------implementation functions--------------------------------------------------------------
 
 
 sourceVertex = "s" 
