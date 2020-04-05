@@ -6,16 +6,21 @@ Games,
 Team(Team),
 Teams,
 teamname,
+name,
+hometeam,
+awayteam, 
+setTeamToWinGame,
+allPossibleResults,
+allPossibleResults',
+getFirstPlacePoints',
+addStanding',
 points,
 TeamScore(TeamScore),
 Standings,
-eliminationBruteForce,
-eliminationBruteForce',
-testTeamEliminationBruteForce,
 loadGames,
 loadTeams,
-cutofround,
-cutofdate,
+setcutofDate,
+setcutofRound,
 standing,
 standing',
 getRelevantGames,
@@ -150,57 +155,6 @@ gamesToPlaySummary' games =    let emptymap = (Map.fromList [])::Map.Map (String
                                    in map(\((team1,team2),val) -> (team1,team2,val) ) l
 
 
---- brutce force all scenarios to test if a team is eliminated or not.  
-testTeamEliminationBruteForce:: IO Teams-> IO Games -> String -> IO  (Games,Bool)
-testTeamEliminationBruteForce  teams  games team = do
-                                                      teams' <- teams          
-                                                      games' <- games 
-                                                      return (testTeamEliminationBruteForce'  teams'  games' team )
-
-testTeamEliminationBruteForce':: Teams-> Games -> String -> (Games,Bool)
-testTeamEliminationBruteForce'  teams  games team = 
-                                                      --- get relevant games   
-                                                      let relevantgames = getRelevantGames' teams games team 
-                                                      
-                                                        --- Set the remaining games of the team to be winning
-                                                          teamGames = map (\g -> setTeamToWinGame g  team ) $ filter (\g -> hometeam g == team || awayteam g == team) $ gamesToPlay' games
-                                                                                                                
-                                                        --- calculate the maximum point the team could get                                            
-                                                          maxPoints = maxPointsforTeam' teams games team 
-                                                          
-                                                      
-                                                        --- get team conference 
-                                                          conf =  getConf teams team
-                                                      
-                                                        --- compute standing so far       
-                                                          standing = standing' teams relevantgames conf
-                                                      
-                                                        --- Now get all the remaining games
-                                                          gamestoplay = gamesToPlay' relevantgames 
-                                                                                                                                                         
-                                                          
-                                                        --- Get all possible results of the remaining games
-                                                          outcomes = allPossibleResults' gamestoplay [] 
-
-                                                        --- check if any of the possible outcome can lead for the given team to be the first
-                                                          (games',eliminated') = foldr (\outcome  (g,eliminated)-> if not eliminated 
-                                                                                                     then (g,eliminated)  
-                                                                                                     else if  getFirstPlacePoints' (addStanding' standing  (standing' teams outcome conf)) <= maxPoints 
-                                                                                                          then (outcome,False) 
-                                                                                                          else  (g,eliminated)) ([],True)  outcomes                                                       
-                                                                                                          
-                                                      
-                                                      in ( if eliminated' then (games',eliminated') else (teamGames++games',eliminated') )
-
---- Test alimination for all teams using brute force  and return a list of eliminated teams
-eliminationBruteForce:: IO Teams-> IO Games -> IO [String]
-eliminationBruteForce teams games =  do
-                                        teams' <- teams          
-                                        games' <- games 
-                                        return (eliminationBruteForce'   teams'  games'  )                
-
-eliminationBruteForce':: Teams-> Games -> [String]
-eliminationBruteForce' teams games =  foldr(\team acc -> if  snd ( testTeamEliminationBruteForce'  teams games (name team) )  then ( (name team):acc) else acc) []  teams
 
 -- Calculate the maximum possible points a team can get 
 maxPointsforTeam :: IO Teams -> IO Games -> String -> IO Int 
@@ -236,28 +190,28 @@ getFirstPlacePoints' standings  = points $  last (sort standings)
 
 
 -- Erease the results for games after specific date so we have some data to work with                      
-cutofdate:: IO Games -> String -> IO Games
-cutofdate games s  = do
+setcutofDate:: IO Games -> String -> IO Games
+setcutofDate games s  = do
                         games' <- games 
-                        return (cutofdate'  games' s) 
+                        return (setcutofDate'  games' s) 
                       
 
 
-cutofdate':: Games -> String -> Games
-cutofdate' games s =  case strtoTime  s of
+setcutofDate':: Games -> String -> Games
+setcutofDate' games s =  case strtoTime  s of
                             Nothing -> error "Bad date- date should be provided the format of dd/mm/yyyy hh:mm "
                             ( Just ltime) ->   map (\(Game round t location hometeam awayteam result ) -> if t <  ( Just ltime) then  (Game round t location hometeam awayteam result ) else (Game round t location hometeam awayteam Nothing ) ) games    
 
 
 -- Erease the results for games after specific round so we have some data to work with                      
-cutofround:: IO Games -> Int -> IO Games
-cutofround games r  = do
+setcutofRound:: IO Games -> Int -> IO Games
+setcutofRound games r  = do
                         games' <- games 
-                        return (cutofround'  games' r) 
+                        return (setcutofRound'  games' r) 
                       
 
-cutofround':: Games -> Int -> Games
-cutofround' games r =  map (\(Game round t location hometeam awayteam result ) -> if round <= r then  (Game round t location hometeam awayteam result ) else (Game round t location hometeam awayteam Nothing ) ) games 
+setcutofRound':: Games -> Int -> Games
+setcutofRound' games r =  map (\(Game round t location hometeam awayteam result ) -> if round <= r then  (Game round t location hometeam awayteam result ) else (Game round t location hometeam awayteam Nothing ) ) games 
   
 -----------------------------------implementation functions----------------------------------------------------------
 

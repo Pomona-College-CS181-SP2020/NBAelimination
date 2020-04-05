@@ -15,7 +15,7 @@ main =  do
                     
 -------------------------- elimintation tests   --------------------------------------------------------------
 runEliminationTests = do                 
-              elimination_1 <- (eliminationMaxFlowFromFile  "teamstest.csv"  "games_no_elimination.csv" )
+              elimination_1 <- (eliminationMaxFlowFromFile  "teamstest.csv"  "gamestest_noelimination.csv" )
               printResult "no elimination" elimination_1 []           
  
               elimination_2 <- (eliminationMaxFlowFromFile  "teamstest.csv"  "gamestest_1.csv" )
@@ -24,7 +24,7 @@ runEliminationTests = do
               
               --- long test ----
               let nbaTeams  =  loadTeams "teamsnba.csv"          
-              nbaGames'  <- cutofdate  (loadGames "gamesnba.csv" nbaTeams) "10/4/2019 00:00"
+              nbaGames'  <- setcutofDate  (loadGames "gamesnba.csv" nbaTeams) "10/4/2019 00:00"
               nbaTeams' <- nbaTeams
               let elimination_3 =  eliminationMaxFlow'  nbaTeams' nbaGames'
                   elimination_3_exp =  eliminationBruteForce'  nbaTeams' nbaGames' 
@@ -37,6 +37,6 @@ printResult test actual expected = if  actual /= expected then putStrLn ("test "
 
 --- some some ad hoc variables defnition for more testing and debugging 
 g_nbaTeams  =  loadTeams "teamsnba.csv" 
-g_nbaGames = cutofdate  (loadGames "gamesnba.csv" g_nbaTeams) "10/4/2019 00:00"
+g_nbaGames = setcutofDate  (loadGames "gamesnba.csv" g_nbaTeams) "10/4/2019 00:00"
 res = eliminationMaxFlow  g_nbaTeams g_nbaGames
 res' = eliminationBruteForce g_nbaTeams g_nbaGames

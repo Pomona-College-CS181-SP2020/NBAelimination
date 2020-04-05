@@ -1,5 +1,5 @@
 module Elimination 
-(eliminationMaxFlow,eliminationMaxFlow',eliminationMaxFlowFromFile,eliminationBruteForce',eliminationBruteForce,eliminationBruteForceFromFile,loadTeams,loadGames,cutofround,cutofdate) where
+(eliminationMaxFlow,eliminationMaxFlow',eliminationMaxFlowFromFile,eliminationBruteForce',eliminationBruteForce,eliminationBruteForceFromFile,loadTeams,loadGames,setcutofRound,setcutofDate) where
 
 import MaxFlow
 import GamesLib
@@ -31,14 +31,72 @@ eliminationBruteForceFromFile teamsfile gamesfile  = let   teams = loadTeams  te
                                                            games = loadGames gamesfile teams
                                                      in  (eliminationBruteForce teams games)
  
+ 
+
+--- Test alimination for all teams using brute force  and return a list of eliminated teams
+eliminationBruteForce:: IO Teams-> IO Games -> IO [String]
+eliminationBruteForce teams games =  do
+                                        teams' <- teams          
+                                        games' <- games 
+                                        return (eliminationBruteForce'   teams'  games'  )                
+
+eliminationBruteForce':: Teams-> Games -> [String]
+eliminationBruteForce' teams games =  foldr(\team acc -> if  snd ( testTeamEliminationBruteForce'  teams games (name team) )  then ( (name team):acc) else acc) []  teams 
+ 
 -----------------------------------implementation functions--------------------------------------------------------------
 
-
+--- The label of source vertex in the networkFlow 
 sourceVertex = "s" 
+
+--- The label of the sync vertex in the networkFlow 
 syncVertex = "t"  
 
--- Get the list of games that are relevant for the MaxFlow - games that were not played yet and do not include teams that 
--- can't be in the first place  and do not include the team that is tested for elimination.
+
+--- brutce force all scenarios to test if a team is eliminated or not.  
+testTeamEliminationBruteForce:: IO Teams-> IO Games -> String -> IO  (Games,Bool)
+testTeamEliminationBruteForce  teams  games team = do
+                                                      teams' <- teams          
+                                                      games' <- games 
+                                                      return (testTeamEliminationBruteForce'  teams'  games' team )
+
+testTeamEliminationBruteForce':: Teams-> Games -> String -> (Games,Bool)
+testTeamEliminationBruteForce'  teams  games team = 
+                                                      --- get relevant games   
+                                                      let relevantgames = getRelevantGames' teams games team 
+                                                      
+                                                        --- Set the remaining games of the team to be winning
+                                                          teamGames = map (\g -> setTeamToWinGame g  team ) $ filter (\g -> hometeam g == team || awayteam g == team) $ gamesToPlay' games
+                                                                                                                
+                                                        --- calculate the maximum point the team could get                                            
+                                                          maxPoints = maxPointsforTeam' teams games team 
+                                                          
+                                                      
+                                                        --- get team conference 
+                                                          conf =  getConf teams team
+                                                      
+                                                        --- compute standing so far       
+                                                          standing = standing' teams relevantgames conf
+                                                      
+                                                        --- Now get all the remaining games
+                                                          gamestoplay = gamesToPlay' relevantgames 
+                                                                                                                                                         
+                                                          
+                                                        --- Get all possible results of the remaining games
+                                                          outcomes = allPossibleResults' gamestoplay [] 
+
+                                                        --- check if any of the possible outcome can lead for the given team to be the first
+                                                          (games',eliminated') = foldr (\outcome  (g,eliminated)-> if not eliminated 
+                                                                                                     then (g,eliminated)  
+                                                                                                     else if  getFirstPlacePoints' (addStanding' standing  (standing' teams outcome conf)) <= maxPoints 
+                                                                                                          then (outcome,False) 
+                                                                                                          else  (g,eliminated)) ([],True)  outcomes                                                       
+                                                                                                          
+                                                      
+                                                      in ( if eliminated' then (games',eliminated') else (teamGames++games',eliminated') )
+
+
+-- Get the list of games that are relevant for the MaxFlow. This includes games that were not played yet excluding teams that 
+-- can't be in the first place  and also the team that is tested for elimination.
 gamesForMaxFlowElimination::IO Teams -> IO Games -> String ->  IO Games
 gamesForMaxFlowElimination teams games team = do 
                                                  games' <- games 
@@ -49,7 +107,7 @@ gamesForMaxFlowElimination'::Teams -> Games -> String -> Games
 gamesForMaxFlowElimination' teams games team = gamesToPlay' $ getRelevantGames' teams games team
 
 
---- Build the source vertex of the network flow graph that has edge to each pair of teams with a capacity that is the number of games 
+--- Build the source vertex of the network flow graph that has edges to each pair of teams with a capacity that is the number of games 
 --- to be played btween the teams.
 buildSourceVertex:: IO  [(String, String, Int)] -> IO Graph 
 buildSourceVertex gSummary = do 
@@ -65,7 +123,7 @@ buildSourceVertex_helper ((team1,team2,geamsCount):xs ) =   (team1 ++ "-" ++ tea
 
 
 
---- Build the vertices that represent the games between 2 teams. From each of those vertices there is 2 edges 1 for each team with 
+--- Build the vertices that represent the games between 2 teams. From each of those vertices there is 2 edges ,1 for each team with 
 --- infinit capacity.
 buildGamesVertices:: IO [(String, String, Int)] -> IO  Graph 
 buildGamesVertices gSummary = do 
@@ -77,6 +135,8 @@ buildGamesVertices' [] = []
 buildGamesVertices' ((team1,team2,geamsCount):xs)  =  (Vertex (team1 ++ "-" ++ team2) [ (team1,maxBound::Int) ,(team2,maxBound::Int) ]  (maxBound::Int)  ""):(buildGamesVertices' xs)          
 
 
+--- Build the vertices that the teams. Each vertex has an edge to the sync vertex with a capacity equal to the maximum points possible for the team to gain without capturing the first place in the conference of the tested team.
+--- If the team is in a different conference , the capcity is set to infinity.
 buildTeamsVertices:: IO Standings  -> IO Teams ->  IO Games -> String -> Int -> IO Graph 
 buildTeamsVertices stand teams  games  team teamMaxPoints = do 
                                                                 stand' <-  stand
@@ -98,7 +158,7 @@ buildTeamsVertices' stand teams  games  team teamMaxPoints = let conf = getConf 
                                                              in ret     
 
 
----Build the full maxflow graph to test elimination of a given team 
+---Build the full maxflow graph to test elimination of a given team - take the teams and relevant games and return a graph
 buildGraphFromGames:: IO Teams -> IO  Games -> String ->  IO Graph 
 buildGraphFromGames teams games team = do 
                                           teams' <- teams
@@ -115,7 +175,7 @@ buildGraphFromGames' teams games team = let maxFlowGames = gamesForMaxFlowElimin
                                         in  sourceVertex ++  gameVertices ++   teamVertices ++ [(Vertex syncVertex [] (maxBound::Int)  "" )]
  
 
-
+--- Test whether a given  team is eliminated or not
 testTeamEliminationMaxFlow:: IO  Teams -> IO Games -> String -> IO Bool  
 testTeamEliminationMaxFlow teams games team = do 
                                                  ret <- putStr $ "testing elimination for team " ++ team
@@ -132,7 +192,7 @@ testTeamEliminationMaxFlow' teams games team =  let maxFlowGraph = buildGraphFro
                                                 
 
 
-
+--- debug helper function 
 testTeamEliminationMaxFlowDebug teams games team = do 
                                                  teams' <- teams
                                                  games' <- games
@@ -146,10 +206,11 @@ testTeamEliminationMaxFlowDebug' teams games team =  let maxFlowGraph = buildGra
                                                          
                                                      in (snd maxFlow,numberOfGames,simpleElimination,(maxPointsforTeam' teams games team ))
  
- 
+
+--- Soke ad hoc declation for debugging  
 g_teams = loadTeams "teamsnba.csv"     
 g_games_all = loadGames "gamesnba.csv"  g_teams   
-g_games = cutofround g_games_all  10 
+g_games = setcutofRound g_games_all  10 
 g_games_toplay = gamesToPlay g_games          
 g_east_standing = standing g_teams g_games EAST
 g_west_standing = standing g_teams g_games WEST
