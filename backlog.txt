@@ -1,0 +1,8 @@
+More documentation and some renaming  of functions
+Enable comments in the games file 
+In the games data  accept dates without hours and  minutes 
+More testing for the maxflow library 
+More testing for the games library 
+Explore graph visualization 
+Explore solving the problem as linear optimization problem 
+Better error handling in case of a bad formatted file 
