@@ -6,3 +6,4 @@ More testing for the games library
 Explore graph visualization 
 Explore solving the problem as linear optimization problem 
 Better error handling in case of a bad formatted file 
+Improve readme 
