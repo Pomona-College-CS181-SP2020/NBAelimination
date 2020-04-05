@@ -15,11 +15,11 @@ main =  do
                     
 -------------------------- elimintation tests   --------------------------------------------------------------
 runEliminationTests = do                 
-              elimination_1 <- (eliminationMaxFlowFromFile  "teams_test_1.csv"  "games_no_elimination.csv" )
+              elimination_1 <- (eliminationMaxFlowFromFile  "teamstest.csv"  "games_no_elimination.csv" )
               printResult "no elimination" elimination_1 []           
  
-              elimination_2 <- (eliminationMaxFlowFromFile  "teams_test_1.csv"  "games_test_1.csv" )
-              elimination_2_exp <- (eliminationBruteForceFromFile    "teams_test_1.csv"  "games_test_1.csv") 
+              elimination_2 <- (eliminationMaxFlowFromFile  "teamstest.csv"  "gamestest_1.csv" )
+              elimination_2_exp <- (eliminationBruteForceFromFile    "teamstest.csv"  "gamestest_1.csv") 
               printResult "team 8 eliminated" elimination_2 elimination_2_exp
               
               --- long test ----
