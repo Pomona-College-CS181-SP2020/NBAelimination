@@ -147,8 +147,8 @@ testTeamEliminationMaxFlowDebug' teams games team =  let maxFlowGraph = buildGra
                                                      in (snd maxFlow,numberOfGames,simpleElimination,(maxPointsforTeam' teams games team ))
  
  
-g_teams = loadTeams "teams.csv"     
-g_games_all = loadGames "nba.csv"  g_teams   
+g_teams = loadTeams "teamsnba.csv"     
+g_games_all = loadGames "gamesnba.csv"  g_teams   
 g_games = cutofround g_games_all  10 
 g_games_toplay = gamesToPlay g_games          
 g_east_standing = standing g_teams g_games EAST
