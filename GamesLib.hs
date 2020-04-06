@@ -386,6 +386,6 @@ setTeamToWinGame game   team = game
 
 
 g_teams = loadTeams "teamstest.csv"
-g_games = loadGames "gamestest_1.csv" g_teams
+g_games = loadGames "gamestest_2.csv" g_teams
 
 
