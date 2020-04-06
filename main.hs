@@ -26,6 +26,10 @@ runEliminationTests = do
               elimination_2_exp <- (eliminationBruteForceFromFile    "teamstest.csv"  "gamestest_2.csv") 
               printResult "teams 8 eliminated-non trivial" elimination_2 elimination_2_exp
               
+              elimination_3 <- (eliminationMaxFlowFromFile  "teamstest.csv"  "gamestest_3.csv" )
+              elimination_3_exp <- (eliminationBruteForceFromFile    "teamstest.csv"  "gamestest_3.csv") 
+              printResult "teams 4,6,8 eliminated-non trivial" elimination_3 elimination_3_exp
+              
               --- long test ----
               let nbaTeams  =  loadTeams "teamsnba.csv"          
               nbaGames'  <- setcutofDate  (loadGames "gamesnba.csv" nbaTeams) "10/4/2019 00:00"
@@ -37,7 +41,7 @@ runEliminationTests = do
               
  
 printResult::Eq a => [Char] -> a -> a -> IO ()              
-printResult test actual expected = if  actual /= expected then putStrLn ("test " ++ test ++ " - failed ")  else  putStrLn("test " ++ test ++ " - passed ")  
+printResult test actual expected = if  actual /= expected then putStrLn ("test: " ++ test ++ " - failed ")  else  putStrLn("test: " ++ test ++ " - passed ")  
 
 --- some some ad hoc variables defnition for more testing and debugging 
 g_nbaTeams  =  loadTeams "teamsnba.csv" 

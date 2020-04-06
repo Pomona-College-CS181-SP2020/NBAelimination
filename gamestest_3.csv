@@ -1,0 +1,83 @@
+﻿Round Number,Date,Location,Home Team,Away Team,Result
+
+1,16/1/2018 20:00,some place,team_7,team_6,102 - 88 
+1,16/1/2018 20:00,some place,team_1,team_5, 88 - 76  
+1,16/1/2018 20:00,some place,team_2,team_4, 88 - 76 
+1,16/1/2018 20:00,some place,team_3,team_8, 88 - 76 
+
+2,16/2/2018 20:00,some place,team_6,team_5, 77 - 86 
+2,16/2/2018 20:00,some place,team_7,team_4, 106 - 101  
+2,16/2/2018 20:00,some place,team_1,team_3, 88 - 76 
+2,16/2/2018 20:00,some place,team_2,team_8, 88 - 76 
+
+3,16/3/2018 20:00,some place,team_5,team_4, 77 - 66 
+3,16/3/2018 20:00,some place,team_6,team_3, 100 - 101  
+3,16/3/2018 20:00,some place,team_7,team_2, 88 - 76
+3,16/3/2018 20:00,some place,team_1,team_8, 88 - 76
+
+4,16/4/2018 20:00,some place,team_4,team_3, 77 - 66 
+4,16/4/2018 20:00,some place,team_5,team_2, 100 - 101  
+4,16/4/2018 20:00,some place,team_6,team_1, 88 - 123
+4,16/4/2018 20:00,some place,team_7,team_8, 88 - 76
+
+5,16/5/2018 20:00,some place,team_3,team_2, 77 - 97 
+5,16/5/2018 20:00,some place,team_4,team_1, 100 - 101  
+5,16/5/2018 20:00,some place,team_5,team_7, 88 - 99
+5,16/5/2018 20:00,some place,team_6,team_8, 88 - 76
+
+6,16/6/2018 20:00,some place,team_2,team_1, 77 - 66 
+6,16/6/2018 20:00,some place,team_3,team_7, 100 - 101  
+6,16/6/2018 20:00,some place,team_4,team_6, 88 - 99
+6,16/6/2018 20:00,some place,team_5,team_8, 88 - 76
+
+7,16/7/2018 20:00,some place,team_1,team_7, 77 - 66 
+7,16/7/2018 20:00,some place,team_2,team_6, 100 - 99 
+7,16/7/2018 20:00,some place,team_3,team_5, 88 - 76
+7,16/7/2018 20:00,some place,team_4,team_8, 88 - 76
+
+--- at this point in time the standing is :
+--- team_1 points = 6
+--- team_7 points = 6
+--- team_2 points = 6
+--- team_3 points = 3
+--- team_5 points = 3
+--- team_4 points = 2
+--- team_6 points = 2
+--- team_8 points = 0
+
+
+
+--- below are the remaining games. It is clear that team 8 is eliminated given that it will play only 4 games but can teams 6 and 4  still be the first ?
+--- No. Even that the can get to 6 points, there is no scenario in which they finish first!
+
+
+8,16/1/2018 20:00,some place,team_7,team_6, none
+8,16/1/2018 20:00,some place,team_1,team_5, none  
+8,16/1/2018 20:00,some place,team_2,team_4, none 
+8,16/1/2018 20:00,some place,team_3,team_8, none 
+
+9,16/2/2018 20:00,some place,team_6,team_5, none 
+9,16/2/2018 20:00,some place,team_7,team_4, none  
+9,16/2/2018 20:00,some place,team_1,team_3, none 
+9,16/2/2018 20:00,some place,team_2,team_8, none 
+
+10,16/3/2018 20:00,some place,team_5,team_4, none 
+10,16/3/2018 20:00,some place,team_6,team_3, none  
+10,16/3/2018 20:00,some place,team_7,team_2, none
+10,16/3/2018 20:00,some place,team_1,team_8, none
+
+11,16/4/2018 20:00,some place,team_4,team_3,none
+11,16/4/2018 20:00,some place,team_5,team_2, none  
+11,16/4/2018 20:00,some place,team_6,team_1, none
+11,16/4/2018 20:00,some place,team_7,team_8, none
+
+
+
+
+
+
+
+
+
+
+
