@@ -20,11 +20,11 @@ runEliminationTests = do
  
               elimination_1 <- (eliminationMaxFlowFromFile  "teamstest.csv"  "gamestest_1.csv" )
               elimination_1_exp <- (eliminationBruteForceFromFile    "teamstest.csv"  "gamestest_1.csv") 
-              printResult "team 8 eliminated" elimination_1 elimination_1_exp
+              printResult "team 8 eliminated -trivial" elimination_1 elimination_1_exp
               
               elimination_2 <- (eliminationMaxFlowFromFile  "teamstest.csv"  "gamestest_2.csv" )
               elimination_2_exp <- (eliminationBruteForceFromFile    "teamstest.csv"  "gamestest_2.csv") 
-              printResult "teams 6 and 8 eliminated" elimination_2 elimination_2_exp
+              printResult "teams 8 eliminated-non trivial" elimination_2 elimination_2_exp
               
               --- long test ----
               let nbaTeams  =  loadTeams "teamsnba.csv"          

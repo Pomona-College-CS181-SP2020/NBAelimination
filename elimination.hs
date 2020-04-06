@@ -1,5 +1,5 @@
 module Elimination 
-(eliminationMaxFlow,eliminationMaxFlow',eliminationMaxFlowFromFile,eliminationBruteForce',eliminationBruteForce,eliminationBruteForceFromFile,loadTeams,loadGames,setcutofRound,setcutofDate) where
+(eliminationMaxFlow,eliminationMaxFlow',eliminationMaxFlowFromFile,eliminationBruteForce',eliminationBruteForce,eliminationBruteForceFromFile,loadTeams,loadGames,setcutofRound,setcutofDate,testTeamEliminationBruteForce) where
 
 import MaxFlow
 import GamesLib
@@ -151,8 +151,9 @@ buildTeamsVertices' stand teams  games  team teamMaxPoints = let conf = getConf 
                                                                                                                                                 else if not (elem hometeam acc ) &&   elem awayteam  acc then hometeam:acc 
                                                                                                                                                 else awayteam:hometeam:acc 
                                                                                                                                             )[] games
-                                                                 ret = foldr ( \(TeamScore teamname conf' points  ) acc -> if  elem teamname  relevantTeams then  
-                                                                                                                          (Vertex teamname [ (syncVertex ,if conf == conf' then  teamMaxPoints-points else (maxBound::Int))] (maxBound::Int)  "" ):acc
+                                                                 ret = foldr ( \(TeamScore teamname conf' points  ) acc -> if elem teamname  relevantTeams  then
+                                                                                                                              if teamMaxPoints==points then (Vertex teamname [] (maxBound::Int)  "" ):acc
+                                                                                                                              else (Vertex teamname [ (syncVertex ,if conf == conf' then  teamMaxPoints-points else (maxBound::Int))] (maxBound::Int)  "" ):acc
                                                                                                                            else  acc  
                                                                                                                     )[]   stand                                    
                                                              in ret     
@@ -204,10 +205,10 @@ testTeamEliminationMaxFlowDebug' teams games team =  let maxFlowGraph = buildGra
                                                          simpleElimination = checkForNegativeCapacity maxFlowGraph
                                                          maxFlow =  solveMaxFlow maxFlowGraph sourceVertex syncVertex
                                                          
-                                                     in (snd maxFlow,numberOfGames,simpleElimination,(maxPointsforTeam' teams games team ))
+                                                     in (snd maxFlow,numberOfGames,simpleElimination,(maxPointsforTeam' teams games team ),maxFlowGraph)
  
 
---- Soke ad hoc declation for debugging  
+--- Some ad hoc declation for debugging  
 g_teams = loadTeams "teamsnba.csv"     
 g_games_all = loadGames "gamesnba.csv"  g_teams   
 g_games = setcutofRound g_games_all  10 
@@ -219,10 +220,26 @@ g_elimination=testTeamEliminationBruteForce g_teams g_games "Toronto Raptors"
 --relevantgames = gamesForMaxFlowElimination g_teams g_games "Toronto Raptors" 
 
 g_teams_test_1 = loadTeams "teamstest.csv"     
-g_games_all_test_1 = loadGames "gamestest_1.csv"  g_teams_test_1   
+g_games_all_test_1 = loadGames "gamestest_2.csv"  g_teams_test_1   
 g_games_test_1 = g_games_all_test_1
 g_east_standing_test_1 = standing g_teams_test_1 g_games_test_1 EAST
-g_elimination_test_1=testTeamEliminationBruteForce g_teams_test_1 g_games_test_1   "team_2" 
+
+
+g_elimination_test_1=testTeamEliminationBruteForce g_teams_test_1 g_games_test_1   "team_6" 
+debug=testTeamEliminationMaxFlowDebug g_teams_test_1 g_games_test_1   "team_6" 
+
+maxFlowGames = gamesForMaxFlowElimination g_teams_test_1 g_games_test_1 "team_6"  
+st = (standing g_teams_test_1 g_games_test_1 EAST )
+maxFlowGamesSummary = gamesToPlaySummary maxFlowGames
+source = buildSourceVertex maxFlowGamesSummary
+gameVertices = buildGamesVertices maxFlowGamesSummary
+teamVertices = buildTeamsVertices stand g_teams_test_1 maxFlowGames  "team_6"    6
+
+
+
+
+
+
 relevantgames = gamesForMaxFlowElimination g_teams_test_1 g_games_test_1  "team_5" 
 gamesSummary   =  gamesToPlaySummary  relevantgames
 stand = standing g_teams_test_1 relevantgames EAST 
