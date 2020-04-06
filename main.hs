@@ -24,7 +24,7 @@ runEliminationTests = do
               
               elimination_2 <- (eliminationMaxFlowFromFile  "teamstest.csv"  "gamestest_2.csv" )
               elimination_2_exp <- (eliminationBruteForceFromFile    "teamstest.csv"  "gamestest_2.csv") 
-              printResult "team xxx eliminated" elimination_2 elimination_2_exp
+              printResult "teams 6 and 8 eliminated" elimination_2 elimination_2_exp
               
               --- long test ----
               let nbaTeams  =  loadTeams "teamsnba.csv"          
@@ -44,8 +44,3 @@ g_nbaTeams  =  loadTeams "teamsnba.csv"
 g_nbaGames = setcutofDate  (loadGames "gamesnba.csv" g_nbaTeams) "10/4/2019 00:00"
 res = eliminationMaxFlow  g_nbaTeams g_nbaGames
 res' = eliminationBruteForce g_nbaTeams g_nbaGames
-
-g_Teams  =  loadTeams "teamstest.csv" 
-g_Games =   loadGames "gamestest_2.csv" g_Teams
-res2 = eliminationMaxFlow  g_Teams g_Games
-res2' = eliminationBruteForce g_Teams g_Games
