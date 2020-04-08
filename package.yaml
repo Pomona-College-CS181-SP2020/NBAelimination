@@ -1,17 +1,17 @@
 name:                NBAelimination
 version:             0.1.0.0
-github:              "githubuser/NBAelimination"
+github:              "https://github.com/Pomona-College-CS181-SP2020/NBAelimination.git"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2020 Author name here"
+author:              "Alon Lapid"
+maintainer:          "alig2015@MyMail.pomona.edu"
+copyright:           "2020 Alon Lapid"
 
 extra-source-files:
 - README.md
 - ChangeLog.md
 
 # Metadata used when publishing your package
-# synopsis:            Short description of your package
+# synopsis:            From a list of played games and a list of not yet played games compute which teams can't finish first in thier conference.
 # category:            Web
 
 # To avoid duplicated efforts in documentation and dealing with the
