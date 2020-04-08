@@ -36,7 +36,6 @@ gamesToPlay) where
 
 
 import MaxFlow
-import Data.Dates
 import Data.Time
 import Data.List.Split
 import Data.Maybe

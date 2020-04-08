@@ -1,20 +1,17 @@
 import Elimination
 import System.Environment
+import System.Directory
 import System.Exit
 import System.IO
 
+
 main :: IO ()
-main =  do 
-            putStrLn  " Enter a team file " 
-            teamFile <- getLine 
-            putStrLn  " Enter a games  file " 
-            gamesFile <- getLine 
-            eliminated <- eliminationMaxFlowFromFile  teamFile  gamesFile
-            putStrLn  $ "The eliminated teams are  "  ++  show  eliminated       
-                                            
-                    
+main = runEliminationTests
+
 -------------------------- elimintation tests   --------------------------------------------------------------
-runEliminationTests = do                 
+runEliminationTests = do      
+              dir <- getCurrentDirectory   
+              putStrLn dir 			  
               elimination_0 <- (eliminationMaxFlowFromFile  "teamstest.csv"  "gamestest_noelimination.csv" )
               printResult "no elimination" elimination_0 []           
  
@@ -42,9 +39,3 @@ runEliminationTests = do
  
 printResult::Eq a => [Char] -> a -> a -> IO ()              
 printResult test actual expected = if  actual /= expected then putStrLn ("test: " ++ test ++ " - failed ")  else  putStrLn("test: " ++ test ++ " - passed ")  
-
---- some some ad hoc variables defnition for more testing and debugging 
-g_nbaTeams  =  loadTeams "teamsnba.csv" 
-g_nbaGames = setcutofDate  (loadGames "gamesnba.csv" g_nbaTeams) "10/4/2019 00:00"
-res = eliminationMaxFlow  g_nbaTeams g_nbaGames
-res' = eliminationBruteForce g_nbaTeams g_nbaGames
