@@ -9,6 +9,7 @@ main :: IO ()
 main = runEliminationTests
 
 -------------------------- elimintation tests   --------------------------------------------------------------
+runEliminationTests::IO ()
 runEliminationTests = do                     
               let testdir ="test"               
               elimination_0 <- (eliminationMaxFlowFromFile  "test/teamstest.csv"  "test/gamestest_noelimination.csv" )
@@ -30,12 +31,16 @@ runEliminationTests = do
               let nbaTeams  =  loadTeams "test/teamsnba.csv"          
               nbaGames'  <- setcutofDate  (loadGames "test/gamesnba.csv" nbaTeams) "10/4/2019 00:00"
               nbaTeams' <- nbaTeams
-              let elimination_3 =  eliminationMaxFlow'  nbaTeams' nbaGames'
-                  elimination_3_exp =  eliminationBruteForce'  nbaTeams' nbaGames' 
-              printResult "nba after 10/4/2019 00:00"  elimination_3 elimination_3_exp
+              let elimination_4 =  eliminationMaxFlow'  nbaTeams' nbaGames'
+                  elimination_4_exp =  eliminationBruteForce'  nbaTeams' nbaGames' 
+              printResult "nba after 10/4/2019 00:00"  elimination_4 elimination_4_exp
               
               
-
+appendResult::IO [Bool] -> IO Bool -> IO [Bool]
+appendResult results res = do
+                            results' <-  results
+                            res'     <- res 
+                            return  (results' ++ [res'])
 
 printResult::Eq a => [Char] -> a -> a -> IO ()              
-printResult test actual expected = if  actual /= expected then putStrLn ("test: " ++ test ++ " - failed ")  else  putStrLn("test: " ++ test ++ " - passed ")  
+printResult test actual expected = if  actual /= expected then error ("test: " ++ test ++ " - failed ")  else  putStrLn("test: " ++ test ++ " - passed ")  
