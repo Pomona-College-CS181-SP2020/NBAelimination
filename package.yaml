@@ -47,7 +47,7 @@ executables:
     - time
     - split 
     - directory
-    - hmatrix-glpk
+  
 
 
 tests:
@@ -62,6 +62,5 @@ tests:
     - time
     - split 
     - directory
-    - hmatrix-glpk
     - NBAelimination
 
