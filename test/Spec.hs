@@ -33,7 +33,7 @@ runEliminationTests = do
               nbaTeams' <- nbaTeams
               let elimination_4 =  eliminationMaxFlow'  nbaTeams' nbaGames'
                   elimination_4_exp =  eliminationBruteForce'  nbaTeams' nbaGames' 
-              printResult "nba after 10/4/2019 00:00"  elimination_4 elimination_3_exp
+              printResult "nba after 10/4/2019 00:00"  elimination_4 elimination_4_exp
               
               
 appendResult::IO [Bool] -> IO Bool -> IO [Bool]
