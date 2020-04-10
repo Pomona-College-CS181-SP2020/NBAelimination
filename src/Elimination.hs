@@ -1,6 +1,7 @@
 module Elimination 
 (eliminationMaxFlow,eliminationMaxFlow',eliminationMaxFlowFromFile,eliminationBruteForce',eliminationBruteForce,eliminationBruteForceFromFile,loadTeams,loadGames,setcutofRound,setcutofDate,testTeamEliminationBruteForce) where
 
+import Numeric.LinearProgramming
 import MaxFlow
 import GamesLib
 
