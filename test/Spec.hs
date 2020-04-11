@@ -1,5 +1,6 @@
 import Elimination
 import GamesLib
+import MaxFlow
 import System.Environment
 import System.Directory
 import System.Exit
@@ -61,11 +62,28 @@ runEliminationTests = do
               printResult "GamesLib test 4: merge 2 standings with one standing empty" (toListofTouples stand) (toListofTouples stand_exp)
 
              
-              let nicksMaxPoints =  maxPointsforTeam'  nbaTeams' nbaGames' "New York Knicks"                 
-              printResult "GamesLib test 5: compute maximum possible points for Nicks given the standing before the last round " nicksMaxPoints 18
+              let nicksMaxPoints =  maxPointsforTeam'  nbaTeams' nbaGames' "New York Knicks"   
+                  nicksMaxPoints_exp = 18              
+              printResult "GamesLib test 5: compute maximum possible points for Nicks given the standing before the last round " nicksMaxPoints nicksMaxPoints_exp
               
+              let network =  [  Vertex "0" [("1",16), ("2",13)  ] (maxBound::Int)  "", Vertex "1" [("2",10), ("3",12)  ] (maxBound::Int) "",  Vertex "2" [("4",14) ,("1",4)        ] (maxBound::Int) ""    ,  Vertex "3" [ ("5",20), ("2",9)] (maxBound::Int) "" ,  Vertex "4" [("5",4), ("3",7) ] (maxBound::Int) "" ,   Vertex "5" [ ] (maxBound::Int) ""  ] 
+                  solution = solveMaxFlow network "0" "5"
+                  solution_exp = 23
+              printResult "Maxflow test 1 based on example from https://www.geeksforgeeks.org/max-flow-problem-introduction/" (snd solution) solution_exp
+
+
+              let network = [  Vertex "s" [("u",10), ("v",10)  ] (maxBound::Int)  "", Vertex "u" [("v",15), ("t",5)  ] (maxBound::Int) "",  Vertex "v" [("t",10)  ]  (maxBound::Int)  "" ,  Vertex "t" [ ] (maxBound::Int)  ""   ]
+                  solution = solveMaxFlow network "s" "t"
+                  solution_exp = 15 
+              printResult "Maxflow test 2 based on example from https://en.wikipedia.org/wiki/Maximum_flow_problem#/media/File:MFP1.jpg" (snd solution) solution_exp
               
-              
+              let network =[  Vertex "s" [("a",10), ("c",8)  ] (maxBound::Int)  "", Vertex "a" [("b",5), ("c",2)  ] (maxBound::Int) "",  Vertex "b" [("t",7)  , ("d",8)  ]  (maxBound::Int)  "" ,  Vertex "c" [ ("d",10)] (maxBound::Int)  ""      ,  Vertex "d" [ ("t",10)] (maxBound::Int)  "",  Vertex "t" [ ] (maxBound::Int) ""        ]
+                  solution = solveMaxFlow network "s" "t"
+                  solution_exp = 15 
+              printResult "Maxflow test 3 based on example from https://www.hackerearth.com/practice/algorithms/graphs/maximum-flow/tutorial/" (snd solution) solution_exp
+
+
+
 
 --- check the test result against  the expected result
 printResult::Eq a => [Char] -> a -> a -> IO ()              
