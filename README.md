@@ -11,4 +11,5 @@ stack test
 The simplest way to use the Elimination module is to call:  
 
 eliminationMaxFlowFromFile  teams_file games_file
+
 and you will get a list of the eliminated teams. 
