@@ -62,7 +62,7 @@ runEliminationTests = do
 
              
               let nicksMaxPoints =  maxPointsforTeam'  nbaTeams' nbaGames' "New York Knicks"                 
-              printResult "GamesLib test 5: maximum possible points for Nicks given the standing before the last round " nicksMaxPoints 18
+              printResult "GamesLib test 5: compute maximum possible points for Nicks given the standing before the last round " nicksMaxPoints 18
               
               
               
