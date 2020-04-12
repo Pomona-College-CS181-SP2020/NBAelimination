@@ -92,6 +92,10 @@ runEliminationTests = do
                   solution_exp = 10
               printResult "Maxflow test 5 based on example from https://cp-algorithms.com/graph/edmonds_karp.html" (snd solution) solution_exp 
              
+              let network = [  Vertex "1" [("2",1), ("0",1)  ] (maxBound::Int)  "", Vertex "0" [("1",1), ("3",1)  ] (maxBound::Int) "",  Vertex "2" [("1",1)    ]  (maxBound::Int)  "" ,  Vertex "3" [ ("0",1),("7",1),("4",1)] (maxBound::Int)  ""      ,  Vertex "4" [ ("7",1), ("3",1),("6",1),("5",1) ](maxBound::Int)  "" , Vertex "5" [ ("6",1), ("4",1) ](maxBound::Int)  ""  ,Vertex "6" [ ("5",1), ("4",1), ("7",1) ](maxBound::Int)  "" , Vertex "7" [ ("3",1), ("4",1), ("6",1) ](maxBound::Int)  "" ]
+                  solution = bfs_path network "0" "7"
+                  solution_exp = ["0","3","7"]             
+              printResult "BFS test 1 based on example from https://www.geeksforgeeks.org/shortest-path-unweighted-graph/" solution solution_exp 
                
 --- check the test result against  the expected result
 printResult::Eq a => [Char] -> a -> a -> IO ()              

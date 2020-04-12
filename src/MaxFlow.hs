@@ -1,5 +1,5 @@
 module MaxFlow 
-(checkForNegativeCapacity,isValidMaxFlowNet,solveMaxFlow,MaxFlowNet,MaxFlowNet(MaxFlowNet),Graph,Vertex(Vertex)) where
+(bfs_path,checkForNegativeCapacity,isValidMaxFlowNet,solveMaxFlow,MaxFlowNet,MaxFlowNet(MaxFlowNet),Graph,Vertex(Vertex)) where
 import Data.List 
 
 
