@@ -5,10 +5,12 @@ import System.Environment
 import System.Directory
 import System.Exit
 import System.IO
+import Numeric.LinearProgramming
 
 
 main :: IO ()
 main = runEliminationTests
+
 
 -------------------------- elimintation tests   --------------------------------------------------------------
 runEliminationTests::IO ()

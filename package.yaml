@@ -32,6 +32,8 @@ library:
   - sort 
   - containers 
   - hmatrix-glpk
+  - bytestring
+  - req
  
   source-dirs: src
 
@@ -66,5 +68,7 @@ tests:
     - directory
     - NBAelimination
     - hmatrix-glpk
+    - bytestring
+    - req
  
 

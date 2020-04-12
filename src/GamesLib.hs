@@ -46,6 +46,8 @@ import Data.Set (Set)
 import Data.Char
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import Network.HTTP.Req               -- package req
+import qualified Data.ByteString.Lazy as BL
 
 ---------------------------------public interface ----------------------------------------------
 
