@@ -265,7 +265,7 @@ strtoTime str = case  ((parseTime  defaultTimeLocale  "%d/%m/%Y %H:%M" (formatDa
                     Just (ZonedTime ltime zone) -> (Just ltime)  
 
 
---- Return a distinc list of teams 
+--- Return a distinc list of teams' names 
 teams:: IO Games -> IO [String]
 teams games =  do 
                     games' <- games
@@ -384,7 +384,5 @@ setTeamToWinGame game   team = game
 
 
 
-g_teams = loadTeams "teamstest.csv"
-g_games = loadGames "gamestest_2.csv" g_teams
 
 

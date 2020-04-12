@@ -237,10 +237,6 @@ gameVertices = buildGamesVertices maxFlowGamesSummary
 teamVertices = buildTeamsVertices st g_teams_test_1 maxFlowGames  "team_6"    5
 
 
-
-
-
-
 relevantgames = gamesForMaxFlowElimination g_teams_test_1 g_games_test_1  "team_5" 
 gamesSummary   =  gamesToPlaySummary  relevantgames
 stand = standing g_teams_test_1 relevantgames EAST 

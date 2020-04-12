@@ -5,11 +5,12 @@ import Data.List
 
 ---------------------------------public interface ----------------------------------------------
 
+---The Vertex data type 
 data Vertex = Vertex {
-                          vertexLabel :: String
-                        , vertexNeighbors :: [(String,Int)]
-                        , vertexDistance :: Int
-                        , vertexPredecessor :: String
+                          vertexLabel :: String -- the name of the Vertex 
+                        , vertexNeighbors :: [(String,Int)]  -- the edges to other Vertices 
+                        , vertexDistance :: Int  -- place holder for shortest path result  - the  
+                        , vertexPredecessor :: String -- place holder for shortest path result  - the predecessor  
                       } deriving (Show)
 
 -- We define a graph as a list of vertexes.
@@ -73,8 +74,9 @@ checkvertexNeighbors [] _ = error  "Empty graph"
 checkvertexNeighbors g  [] = True 
 checkvertexNeighbors g  ((label,_):xs) = labelinGraph g label &&  checkvertexNeighbors g xs
 
+--- checks if the neighbor of  a vertex is  also a vertex  
 checkVertex :: [Vertex] -> Vertex -> Bool
-checkVertex [] _ = error "impossible"
+checkVertex [] _ = error "bad graph "
 checkVertex g (Vertex _ [] _ _) = True
 checkVertex g (Vertex _ n _ _) = checkvertexNeighbors  g n
 
@@ -84,7 +86,7 @@ checkVertexs g []  = True
 checkVertexs g (x:xs) = checkVertex g x && checkVertexs g xs
 
 
--- add vertices in graph 2 not in graph 1 to graph 1
+-- add vertices in graph 2 ,that are not in graph 1, to graph 1
 addOtherVertices::Graph -> Graph -> Graph
 addOtherVertices [] [] = []
 addOtherVertices g1 [] = g1
@@ -104,7 +106,7 @@ popQueue (x:xs) = (xs,x)
 
 updateDistPred :: [Vertex] -> Int -> [Char] -> [Vertex]
 updateDistPred [] _ _ = []
--- Go though each vertex and swap the current distance and predecessor labels with the new parameters.
+-- Go though each vertex and update the current distance and predecessor labels with the new parameters.
 updateDistPred (x:y) dist predLabel = map (\ (Vertex label n _ _) -> Vertex label n dist predLabel) (x:y)
 
 -- Go though each vertex that matches a label and swap the current distance and predecessor labels with the new parameters.
@@ -112,7 +114,7 @@ updateDistPredbylabel::[Vertex] -> String -> String -> Int -> [Vertex]
 updateDistPredbylabel [] _ _ _ = []
 updateDistPredbylabel g label dist predLabel = map (\ (Vertex vlabel n p d ) -> if  label  == vlabel then  (Vertex vlabel n predLabel dist) else (Vertex vlabel n p d )  ) g
 
-
+--- does the actul BFS
 bfs_helper :: Graph -> Graph -> [String] -> Graph -> Graph
 bfs_helper _ [] _ outGraph = outGraph
 bfs_helper inGraph queue seen outGraph =  bfs_helper inGraph new_queue new_seen new_outgraph
@@ -163,10 +165,11 @@ bfs inGraph startLabel =
      seen = [startLabel]
      
      -- Run BFS itself
-     in if ok then addOtherVertices (bfs_helper inGraph_new queue seen outGraph) inGraph_new else error ("bad graph" ++ show inGraph_new)
+     in if ok then addOtherVertices (bfs_helper inGraph_new queue seen outGraph) inGraph_new else error ("bad graph found in bfs" ++ show inGraph_new)
 
 no_path_mark :: [Char]
 no_path_mark = "no path"
+
 
 trace_back_helper :: Graph -> [Char] -> [Char] -> [[Char]]
 trace_back_helper _ "" _ = [no_path_mark]
