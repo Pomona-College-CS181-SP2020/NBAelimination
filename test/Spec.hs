@@ -82,9 +82,17 @@ runEliminationTests = do
                   solution_exp = 15 
               printResult "Maxflow test 3 based on example from https://www.hackerearth.com/practice/algorithms/graphs/maximum-flow/tutorial/" (snd solution) solution_exp
 
+              let network = [  Vertex "0" [("1",20), ("3",10) , ("2",30)  ] (maxBound::Int)  "", Vertex "1" [("4",30), ("2",40)  ] (maxBound::Int) "",  Vertex "2" [("4",20) ,("3",10)    ]  (maxBound::Int)  "" ,  Vertex "3" [ ("4",20),("2",10)]  (maxBound::Int)  "" ,  Vertex "4" [ ] (maxBound::Int) ""    ]
+                  solution = solveMaxFlow network "0" "4"
+                  solution_exp = 60
+              printResult "Maxflow test 4 based on example from https://developers.google.com/optimization/flow/maxflow" (snd solution) solution_exp 
 
-
-
+              let network = [  Vertex "s" [("a",7), ("d",4)  ] (maxBound::Int)  "", Vertex "a" [("b",5), ("c",3)  ] (maxBound::Int) "",  Vertex "b" [("t",8)   ]  (maxBound::Int)  "" ,  Vertex "c" [ ("b",3),("t",5)] (maxBound::Int)  "" , Vertex "d" [ ("a",3),("c",2)] (maxBound::Int)  ""      , Vertex "t" [ ] (maxBound::Int) ""    ]
+                  solution = solveMaxFlow network "s" "t"
+                  solution_exp = 10
+              printResult "Maxflow test 5 based on example from https://cp-algorithms.com/graph/edmonds_karp.html" (snd solution) solution_exp 
+             
+               
 --- check the test result against  the expected result
 printResult::Eq a => [Char] -> a -> a -> IO ()              
 printResult test actual expected = if  actual /= expected then error ( test ++ " - failed ")  else  putStrLn(test ++ " - passed ")  
