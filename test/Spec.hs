@@ -102,7 +102,7 @@ runEliminationTests = do
               downloadGamesfromWeb  "https://fixturedownload.com/download/nba-2019-EasternStandardTime.csv" "test/nba-2019-EasternStandardTime.csv"
               elimination_nba_2019 <- eliminationMaxFlowFromFile  "test/teamsnba.csv"  "test/nba-2019-EasternStandardTime.csv"
               let elimination_nba_2019_exp = ["Brooklyn Nets","New York Knicks","Detroit Pistons","Chicago Bulls","Cleveland Cavaliers","Orlando Magic","Charlotte Hornets","Washington Wizards","Atlanta Hawks","Portland Trail Blazers","Minnesota Timberwolves","Golden State Warriors","Sacramento Kings","Phoenix Suns","San Antonio Spurs","New Orleans Pelicans"]
-              printResult "filnal test elimination of nba 2019-2020 suspended season" elimination_nba_2019 elimination_nba_2019_exp 
+              printResult "Final elimination test of nba 2019-2020 suspended season" elimination_nba_2019 elimination_nba_2019_exp 
              
     --- 
 
