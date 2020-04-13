@@ -9,7 +9,7 @@ import Numeric.LinearProgramming
 
 
 main :: IO ()
-main = runEliminationTests
+main = runEliminationTests 
 
 
 -------------------------- elimintation tests   --------------------------------------------------------------
@@ -98,7 +98,11 @@ runEliminationTests = do
                   solution = bfs_path network "0" "7"
                   solution_exp = ["0","3","7"]             
               printResult "BFS test 1 based on example from https://www.geeksforgeeks.org/shortest-path-unweighted-graph/" solution solution_exp 
-               
+
+              downloadGamesfromWeb  "https://fixturedownload.com/download/nba-2019-EasternStandardTime.csv" "test/nba-2019-EasternStandardTime.csv"
+              
+    --- 
+
 --- check the test result against  the expected result
 printResult::Eq a => [Char] -> a -> a -> IO ()              
 printResult test actual expected = if  actual /= expected then error ( test ++ " - failed ")  else  putStrLn(test ++ " - passed ")  

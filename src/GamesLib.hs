@@ -19,6 +19,7 @@ TeamScore(TeamScore),
 Standings,
 loadGames,
 loadTeams,
+downloadGamesfromWeb,
 setcutofDate,
 setcutofRound,
 standing,
@@ -46,8 +47,10 @@ import Data.Set (Set)
 import Data.Char
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import Network.HTTP.Req               -- package req
+import Network.Wreq                  -- package wreq
+import Control.Lens                  -- package lens
 import qualified Data.ByteString.Lazy as BL
+
 
 ---------------------------------public interface ----------------------------------------------
 
@@ -93,6 +96,8 @@ instance Ord TeamScore where
                                                                             | otherwise = GT
                 
 
+
+
 --- loads the teams information from a file 
 loadTeams::String -> IO Teams    
 loadTeams fileName =   do
@@ -118,6 +123,16 @@ linetoTeam line =  let tokens = (splitOn "," line)::[String]
                        conference  =  filter (\c -> isAlpha c) $ (tokens!!1) :: String   
                        cnf = if conference == "east" then EAST else if   conference == "west" then WEST else error "bad conference"  
                    in (Team name cnf ) 
+
+--- Download a games file from  the web
+downloadGamesfromWeb::String -> String -> IO ()
+downloadGamesfromWeb url localpath =  do
+                                        -- make a requeset
+                                        r <- get url
+                                        -- get the contents (as a lazy ByteString)
+                                        let contents = r ^. responseBody
+                                        -- write it to a local file
+                                        BL.writeFile localpath contents
 
 --- Load the NBA game results from a file 
 loadGames::String -> IO Teams -> IO Games    
