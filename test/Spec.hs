@@ -100,8 +100,12 @@ runEliminationTests = do
               printResult "BFS test 1 based on example from https://www.geeksforgeeks.org/shortest-path-unweighted-graph/" solution solution_exp 
 
               downloadGamesfromWeb  "https://fixturedownload.com/download/nba-2019-EasternStandardTime.csv" "test/nba-2019-EasternStandardTime.csv"
-              
+              elimination_nba_2019 <- eliminationMaxFlowFromFile  "test/teamsnba.csv"  "test/nba-2019-EasternStandardTime.csv"
+              let elimination_nba_2019_exp = ["Brooklyn Nets","New York Knicks","Detroit Pistons","Chicago Bulls","Cleveland Cavaliers","Orlando Magic","Charlotte Hornets","Washington Wizards","Atlanta Hawks","Portland Trail Blazers","Minnesota Timberwolves","Golden State Warriors","Sacramento Kings","Phoenix Suns","San Antonio Spurs","New Orleans Pelicans"]
+              printResult "filnal test elimination of nba 2019-2020 suspended season" elimination_nba_2019 elimination_nba_2019_exp 
+             
     --- 
+
 
 --- check the test result against  the expected result
 printResult::Eq a => [Char] -> a -> a -> IO ()              
