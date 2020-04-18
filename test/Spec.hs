@@ -93,6 +93,12 @@ runEliminationTests = do
                   solution = solveMaxFlow network "s" "t"
                   solution_exp = 10
               printResult "Maxflow test 5 based on example from https://cp-algorithms.com/graph/edmonds_karp.html" (snd solution) solution_exp 
+
+              let network = [  Vertex "s" [("1-2",3), ("1-3",8) , ("1-4",7), ("2-3",2),("2-4",7)] (maxBound::Int)  "", Vertex "1-2" [("1",1000), ("2",1000)  ] (maxBound::Int) "",  Vertex "1-3" [("1",1000) ,("3",1000)   ]  (maxBound::Int)  "" ,  Vertex "1-4" [ ("1",1000),("4",1000)] (maxBound::Int)  "" , Vertex "2-3" [ ("2",1000),("3",1000)] (maxBound::Int)  ""      , Vertex "2-4" [ ("2",1000),("4",1000)] (maxBound::Int) "" , Vertex "1" [ ("t",1)] (maxBound::Int)  ""  , Vertex "2" [ ("t",5)] (maxBound::Int)  ""  ,Vertex "3" [ ("t",7)] (maxBound::Int)  ""   ,Vertex "4" [ ("t",13)] (maxBound::Int)  ""  , Vertex "t" [ ] (maxBound::Int) ""    ]
+                  solution = solveMaxFlow network "s" "t"
+                  solution_exp = 26              
+              printResult "Maxflow test 6 based on example from https://www.cs.princeton.edu/courses/archive/spr03/cos226/assignments/baseball.html" (snd solution) solution_exp 
+
              
               let network = [  Vertex "1" [("2",1), ("0",1)  ] (maxBound::Int)  "", Vertex "0" [("1",1), ("3",1)  ] (maxBound::Int) "",  Vertex "2" [("1",1)    ]  (maxBound::Int)  "" ,  Vertex "3" [ ("0",1),("7",1),("4",1)] (maxBound::Int)  ""      ,  Vertex "4" [ ("7",1), ("3",1),("6",1),("5",1) ](maxBound::Int)  "" , Vertex "5" [ ("6",1), ("4",1) ](maxBound::Int)  ""  ,Vertex "6" [ ("5",1), ("4",1), ("7",1) ](maxBound::Int)  "" , Vertex "7" [ ("3",1), ("4",1), ("6",1) ](maxBound::Int)  "" ]
                   solution = bfs_path network "0" "7"
